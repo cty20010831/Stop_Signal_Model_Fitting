@@ -1,0 +1,9 @@
+.DS_Store
+
+__pycache__
+
+# folder that stores simulated data (used to test simulation python code)
+simulated_data
+
+# currently only fitted on individual level
+model_fitting.ipynb
