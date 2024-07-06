@@ -36,6 +36,11 @@ def main():
     draws = pm.draw([mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop, p_tf], 
                     draws=N, random_seed=SEED)
     
+    # Initialize a DataFrame to store true parameters
+    true_parameters = pd.DataFrame(columns=[
+        'participant_id', 'mu_go', 'sigma_go', 'tau_go', 
+        'mu_stop', 'sigma_stop', 'tau_stop', 'p_tf'])
+
     all_trials = []
 
     # Run simulation based on the type of SSD specified
@@ -50,6 +55,19 @@ def main():
         sigma_stop = draws[4][i]
         tau_stop = draws[5][i]
         p_tf = draws[6][i]
+
+        # Store the true parameters
+        true_parameters = pd.concat([true_parameters, pd.DataFrame({
+            'participant_id': [participant_id],
+            'mu_go': [mu_go],
+            'sigma_go': [sigma_go],
+            'tau_go': [tau_go],
+            'mu_stop': [mu_stop],
+            'sigma_stop': [sigma_stop],
+            'tau_stop': [tau_stop],
+            'p_tf': [p_tf]
+        })], ignore_index=True)
+
         
         if args.type == 'fixed':
             # Simulate fixed SSD dataset
@@ -67,10 +85,15 @@ def main():
         trial_df['participant_id'] = participant_id
         all_trials.append(trial_df)
 
+    # Save simulated data and true parameters
     simulated_data = pd.concat(all_trials, ignore_index=True)
-    file_name = f"simulated_data/individual_simulated_data_{args.type}_SSD.csv"
-    simulated_data.to_csv(file_name, index=False)
+    simulated_data_file_name = f"simulation/data/individual_simulated_data_{args.type}_SSD.csv"
+    simulated_data.to_csv(simulated_data_file_name, index=False)
     print(f"Saved simulated data ({args.type} SSD) for {N} participants with {T} trials each.")
+
+    true_parameters_file_name = f"simulation/param/individual_true_parameters_{args.type}_SSD.csv"
+    true_parameters.to_csv(true_parameters_file_name, index=False)
+    print(f"Saved true parameters ({args.type} SSD) for {N} participants with {T} trials each.")
 
 if __name__ == '__main__':
     main()
