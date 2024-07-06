@@ -62,7 +62,7 @@ def main():
     all_trials = []
     p_tf = 0.2
     for i in range(N):
-        participant_id = i + 1
+        participant_id = i
 
         # Retrieve individual parameters
         mu_go = draws[0][i]
@@ -101,3 +101,5 @@ if __name__ == '__main__':
 # Example usage:
 # python simulate_hierarchical_pymc.py --type fixed
 # python simulate_hierarchical_pymc.py --type staircase
+
+# whether to store simluated parameters?

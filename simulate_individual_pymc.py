@@ -40,7 +40,7 @@ def main():
 
     # Run simulation based on the type of SSD specified
     for i in range(N):
-        participant_id = i + 1  # Participant identifier
+        participant_id = i
 
         # Retrieve individual parameters
         mu_go = draws[0][i]
