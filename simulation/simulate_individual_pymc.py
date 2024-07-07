@@ -1,3 +1,4 @@
+import os
 import pymc as pm
 import pandas as pd
 import argparse
@@ -15,6 +16,9 @@ fixed_ssd_set = [80, 160, 240, 320, 400, 480]
 starting_staircase_ssd = 200
 
 def main():
+    # Get the directory where this script is located at
+    dir = os.path.dirname(os.path.abspath(__file__))
+
     # Create ArgumentParser object
     parser = argparse.ArgumentParser(description='Simulate trial data for fixed or staircase SSD.')
     parser.add_argument('--type', type=str, choices=['fixed', 'staircase'], required=True,
@@ -87,11 +91,11 @@ def main():
 
     # Save simulated data and true parameters
     simulated_data = pd.concat(all_trials, ignore_index=True)
-    simulated_data_file_name = f"simulation/data/individual_simulated_data_{args.type}_SSD.csv"
+    simulated_data_file_name = os.path.join(dir, f"simulated_data/individual_simulated_data_{args.type}_SSD.csv")
     simulated_data.to_csv(simulated_data_file_name, index=False)
     print(f"Saved simulated data ({args.type} SSD) for {N} participants with {T} trials each.")
 
-    true_parameters_file_name = f"simulation/param/individual_true_parameters_{args.type}_SSD.csv"
+    true_parameters_file_name = os.path.join(dir, f"true_param/individual_true_parameters_{args.type}_SSD.csv")
     true_parameters.to_csv(true_parameters_file_name, index=False)
     print(f"Saved true parameters ({args.type} SSD) for {N} participants with {T} trials each.")
 
@@ -99,5 +103,5 @@ if __name__ == '__main__':
     main()
 
 # Example usage:
-# python simulate_individual_pymc.py --type fixed
-# python simulate_individual_pymc.py --type staircase
+# python simulation/simulate_individual_pymc.py --type fixed
+# python simulation/simulate_individual_pymc.py --type staircase
