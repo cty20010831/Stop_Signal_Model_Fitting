@@ -3,7 +3,7 @@ import pymc as pm
 import pandas as pd
 import argparse
 
-from util import simulate_trials_fixed_SSD, simulate_trials_staircase_SSD
+from model_fitting.util import simulate_trials_fixed_SSD, simulate_trials_staircase_SSD
 
 # Set random seed for reproducibility
 SEED = 42
