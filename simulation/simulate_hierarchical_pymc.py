@@ -3,7 +3,7 @@ import pymc as pm
 import pandas as pd
 import argparse
 
-from model_fitting.util import simulate_trials_fixed_SSD, simulate_trials_staircase_SSD
+from util import simulate_trials_fixed_SSD, simulate_trials_staircase_SSD
 
 # Set random seed for reproducibility
 SEED = 42
@@ -30,22 +30,22 @@ def main():
     # Sample (individual-level) parameters from hierarchical prior distribution
     with pm.Model():
         # Group-level parameters
-        mu_mu_go = pm.TruncatedNormal('mu_mu_go', mu=500, sigma=50, lower=0)
+        mu_mu_go = pm.TruncatedNormal('mu_mu_go', mu=500, sigma=1/pm.math.sqrt(0.0001), lower=0)
         sigma_mu_go = pm.Uniform('sigma_mu_go', lower=0, upper=300)
-        mu_sigma_go = pm.TruncatedNormal('mu_sigma_go', mu=100, sigma=50, lower=0)
+        mu_sigma_go = pm.TruncatedNormal('mu_sigma_go', mu=100, sigma=1/pm.math.sqrt(0.001), lower=0)
         sigma_sigma_go = pm.Uniform('sigma_sigma_go', lower=0, upper=200)
-        mu_tau_go = pm.TruncatedNormal('mu_tau_go', mu=80, sigma=50, lower=0)
+        mu_tau_go = pm.TruncatedNormal('mu_tau_go', mu=80, sigma=1/pm.math.sqrt(0.001), lower=0)
         sigma_tau_go = pm.Uniform('sigma_tau_go', lower=0, upper=200)
 
-        mu_mu_stop = pm.TruncatedNormal('mu_mu_stop', mu=200, sigma=50, lower=0)
+        mu_mu_stop = pm.TruncatedNormal('mu_mu_stop', mu=200, sigma=1/pm.math.sqrt(0.0001), lower=0)
         sigma_mu_stop = pm.Uniform('sigma_mu_stop', lower=0, upper=200)
-        mu_sigma_stop = pm.TruncatedNormal('mu_sigma_stop', mu=40, sigma=50, lower=0)
+        mu_sigma_stop = pm.TruncatedNormal('mu_sigma_stop', mu=40, sigma=1/pm.math.sqrt(0.001), lower=0)
         sigma_sigma_stop = pm.Uniform('sigma_sigma_stop', lower=0, upper=100)
-        mu_tau_stop = pm.TruncatedNormal('mu_tau_stop', mu=30, sigma=50, lower=0)
+        mu_tau_stop = pm.TruncatedNormal('mu_tau_stop', mu=30, sigma=1/pm.math.sqrt(0.001), lower=0)
         sigma_tau_stop = pm.Uniform('sigma_tau_stop', lower=0, upper=100)
         
         mu_p_tf = pm.TruncatedNormal('mu_p_tf', mu=0, sigma=1, lower=-6, upper=6)
-        sigma_p_tf = pm.Uniform('sigma_p_tf', lower=0.01, upper=3)
+        sigma_p_tf = pm.Uniform('sigma_p_tf', lower=0, upper=5)
 
         # Participant-specific parameters
         mu_go = pm.TruncatedNormal('mu_go', mu=mu_mu_go, sigma=1/pm.math.sqr(sigma_mu_go), lower=0)
@@ -112,11 +112,11 @@ def main():
 
     # Save simulated data and true parameters
     simulated_data = pd.concat(all_trials, ignore_index=True)
-    simulated_data_file_name = os.path.join(dir, f"simulated_data/individual_simulated_data_{args.type}_SSD.csv")
+    simulated_data_file_name = os.path.join(dir, f"simulated_data/hierarchical_simulated_data_{args.type}_SSD.csv")
     simulated_data.to_csv(simulated_data_file_name, index=False)
     print(f"Saved simulated data ({args.type} SSD) for {N} participants with {T} trials each.")
 
-    true_parameters_file_name = os.path.join(dir, f"true_param/individual_true_parameters_{args.type}_SSD.csv")
+    true_parameters_file_name = os.path.join(dir, f"true_param/hierarchical_true_parameters_{args.type}_SSD.csv")
     true_parameters.to_csv(true_parameters_file_name, index=False)
     print(f"Saved true parameters ({args.type} SSD) for {N} participants with {T} trials each.")
 
