@@ -27,51 +27,6 @@ def simulate_exgaussian(mu, sigma, tau):
     
     return simulated_value
 
-def random_normal_truncate(mu, sigma, lower_bound=-np.inf, upper_bound=np.inf):
-    """Generate a random value for a truncated normal distribution.
-
-    Parameters
-    ----------
-    mu: mean of the original normal distribution
-    sigma: sd of the original normal distribution
-    lower_bound: lower bound for the returned value
-    upper_bound: higher bound for the returned value
-
-    Returns
-    -------
-    A simulated value following truncated normal distribution with given parameters.
-    """
-    a, b = (lower_bound - mu) / sigma, (upper_bound - mu) / sigma
-    return truncnorm(a, b, loc=mu, scale=sigma).rvs()
-
-def simulate_p_tf_hierarchical(N):
-    """Simulate the participant-level probability of trigger failure (for hierarchical models) 
-
-    Parameters
-    ----------
-    N: number of participants
-
-    Returns
-    -------
-        Numpy array of adjusted probit-transformed probability of trigger 
-        failure values for N participants.
-    """
-    # Generate initial probabilities uniformly for N participants
-    initial_probabilities = np.random.uniform(0, 1, size=N)
-
-    # Probit transformation
-    probit_transformed = norm.ppf(initial_probabilities)
-
-    # Hierarchical Normal Modeling
-    group_mean = random_normal_truncate(0, 1, lower_bound=-6, upper_bound=6)
-    group_std = np.random.uniform(0.1, 1) # weakly informative uniform prior
-
-    # Model the probit-transformed values with a truncated normal distribution for each participant
-    adjusted_p_tf = np.array([random_normal_truncate(group_mean, group_std, -6, 6) for _ in probit_transformed])
-
-    return adjusted_p_tf
-
-
 def simulate_trials_fixed_SSD(trial_type_sequence, ssd_set, p_tf,
                               mu_go, sigma_go, tau_go, 
                               mu_stop, sigma_stop, tau_stop):
@@ -289,65 +244,6 @@ def exgaussian_cdf(x, mu, sigma, tau):
     # Matzke, D., Love, J., & Heathcote, A. (2017). A Bayesian approach for 
     # estimating the probability of trigger failures in the stop-signal paradigm. 
     # Behavior research methods, 49, 267-281.
-'''
-The following two functions may be deleted later.
-'''
-# def go_RT_log_likelihood(t_g, mu_go, sigma_go, tau_go):
-#     '''
-#     Likelihood function for response times in go trials using the Ex-Gaussian distribution.
-#     Inputs:
-#         t_g: array of observed response times (go RT)
-#         mu_go: mean of the Gaussian component for go RT distribution
-#         sigma_go: standard deviation of the Gaussian component for go RT distribution
-#         tau_go: mean (or rate parameter) of the exponential component for go RT distribution
-    
-#     Returns:
-#         Overall likelihood for the observed set of response times in go trials
-#     '''
-#     # Calculate the PDF for each response time (array of indiviudal trial likelihoods)
-#     individual_likelihoods = exgaussian_pdf(t_g, mu_go, sigma_go, tau_go)
-
-#     # Logarithms are used to avoid underflow in computation of very small numbers
-#     log_likelihoods = np.log(individual_likelihoods)
-#     total_log_likelihood = np.sum(log_likelihoods)
-
-#     return total_log_likelihood
-
-# def signal_respond_RT_log_likelihood(t_r, mu_go, sigma_go, tau_go, 
-#                                      mu_stop, sigma_stop, tau_stop, 
-#                                      p_tf, ssd_array):
-#     '''
-#     Likelihood function for signal-response response times in stop-response trials 
-#     using the Ex-Gaussian distribution.
-
-#     Inputs:
-#         t_r: array of observed response times (singal-respond RT)
-#         mu_go: mean of the Gaussian component for go RT distribution
-#         sigma_go: standard deviation of the Gaussian component for go RT distribution
-#         tau_go: mean (or rate parameter) of the exponential component for go RT distribution
-#         mu_stop: mean of the Gaussian component for stop RT distribution
-#         sigma_stop: standard deviation of the Gaussian component for stop RT distribution
-#         tau_stop: mean (or rate parameter) of the exponential component for stop RT distribution
-#         p_tf: probability of trigger failure (of stop signals)
-#         ssd: array of stop-signal delay time (for stop trials)
-    
-#     Returns:
-#         Overall likelihood for the observed set of signal-response response times in stop-response trials 
-#     '''
-#     # Calculate the "part" of the likelihood related to trigger failure
-#     failed_trigger = p_tf * exgaussian_pdf(t_r, mu_go, sigma_go, tau_go)
-
-#     # Calculate the "part" of the likelihood when the stop process was 
-#     # successfully triggered but has finished after the go process 
-#     # (censored go RT distribution with SSD + SSRT being the right censoring point)
-#     adjusted_mu_stop = mu_stop + ssd_array # shifts the Ex-Gaussian distrbution by SSD
-#     successful_trigger = (1 - p_tf) * (1 - exgaussian_cdf(t_r, adjusted_mu_stop, sigma_stop, tau_stop)) * exgaussian_pdf(t_r, mu_go, sigma_go, tau_go)
-
-#     log_likelihoods = np.log(failed_trigger + successful_trigger)
-#     total_log_likelihood = np.sum(log_likelihoods)
-
-#     return total_log_likelihood
-
 def gauss_legendre_quadrature(upper_bound, SSD, n=50):
     '''
     Generate the nodes (sample points) and weights for Gauss-Legendre 
@@ -429,26 +325,20 @@ def inhibit_log_likelihood_numeric_approximation(mu_go, sigma_go, tau_go,
     times in stop-response trials.
     '''
 
-    # Iterate through each successful inhibition trial to calculate likelihood for each trial 
-    individual_likelihoods = np.zeros(len(ssd_array))
-    
-    for i, ssd in enumerate(ssd_array):
-        # Derive the intergral in likelihood function for successful inhibition
+    individual_likelihoods = []
+
+    for ssd in ssd_array:
         total_integral = 0
-        
-        # Retrieve nodes and weights for Gauss-Legendre quadrature
         nodes, weights = gauss_legendre_quadrature(upper_bound, ssd, n)
 
         for j in range(n):
-            # Note: each node[j] means (unobservable) stop process finishing time
-            intergrand = (1 - exgaussian_cdf(nodes[j], mu_go, sigma_go, tau_go)) * exgaussian_pdf(nodes[j], mu_stop + ssd, sigma_stop, tau_stop)
-            integral = weights[j] * intergrand
+            integrand = (1 - exgaussian_cdf(nodes[j], mu_go, sigma_go, tau_go)) * exgaussian_pdf(nodes[j] - ssd, mu_stop, sigma_stop, tau_stop)
+            integral = weights[j] * integrand
             total_integral += integral
-        
-        # Derive likelihood for an individual trial
-        individual_likelihoods[i] = (1 - p_tf) * total_integral
 
-    # Calculate the overall likelihood
+        individual_likelihood = (1 - p_tf) * total_integral
+        individual_likelihoods.append(individual_likelihood)
+
     log_likelihoods = np.log(individual_likelihoods)
     total_log_likelihood = np.sum(log_likelihoods)
 
