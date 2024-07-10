@@ -29,31 +29,57 @@ def main():
 
     # Sample (individual-level) parameters from hierarchical prior distribution
     with pm.Model():
+        # # Group-level parameters
+        # mu_mu_go = pm.TruncatedNormal('mu_mu_go', mu=500, sigma=1/pm.math.sqrt(0.0001), lower=0)
+        # sigma_mu_go = pm.Uniform('sigma_mu_go', lower=0, upper=300)
+        # mu_sigma_go = pm.TruncatedNormal('mu_sigma_go', mu=100, sigma=1/pm.math.sqrt(0.001), lower=0)
+        # sigma_sigma_go = pm.Uniform('sigma_sigma_go', lower=0, upper=200)
+        # mu_tau_go = pm.TruncatedNormal('mu_tau_go', mu=80, sigma=1/pm.math.sqrt(0.001), lower=0)
+        # sigma_tau_go = pm.Uniform('sigma_tau_go', lower=0, upper=200)
+
+        # mu_mu_stop = pm.TruncatedNormal('mu_mu_stop', mu=200, sigma=1/pm.math.sqrt(0.0001), lower=0)
+        # sigma_mu_stop = pm.Uniform('sigma_mu_stop', lower=0, upper=200)
+        # mu_sigma_stop = pm.TruncatedNormal('mu_sigma_stop', mu=40, sigma=1/pm.math.sqrt(0.001), lower=0)
+        # sigma_sigma_stop = pm.Uniform('sigma_sigma_stop', lower=0, upper=100)
+        # mu_tau_stop = pm.TruncatedNormal('mu_tau_stop', mu=30, sigma=1/pm.math.sqrt(0.001), lower=0)
+        # sigma_tau_stop = pm.Uniform('sigma_tau_stop', lower=0, upper=100)
+        
+        # mu_p_tf = pm.TruncatedNormal('mu_p_tf', mu=0, sigma=1, lower=-6, upper=6)
+        # sigma_p_tf = pm.Uniform('sigma_p_tf', lower=0, upper=5)
+
+        # # Participant-specific parameters
+        # mu_go = pm.TruncatedNormal('mu_go', mu=mu_mu_go, sigma=1/pm.math.sqr(sigma_mu_go), lower=0)
+        # sigma_go = pm.TruncatedNormal('sigma_go', mu=mu_sigma_go, sigma=1/pm.math.sqr(sigma_sigma_go), lower=1)
+        # tau_go = pm.TruncatedNormal('tau_go', mu=mu_tau_go, sigma=1/pm.math.sqr(sigma_tau_go), lower=1)
+        # mu_stop = pm.TruncatedNormal('mu_stop', mu=mu_mu_stop, sigma=1/pm.math.sqr(sigma_mu_stop), lower=0)
+        # sigma_stop = pm.TruncatedNormal('sigma_stop', mu=mu_sigma_stop, sigma=1/pm.math.sqr(sigma_sigma_stop), lower=1)
+        # tau_stop = pm.TruncatedNormal('tau_stop', mu=mu_tau_stop, sigma=1/pm.math.sqr(sigma_tau_stop), lower=1)
+
         # Group-level parameters
-        mu_mu_go = pm.TruncatedNormal('mu_mu_go', mu=500, sigma=1/pm.math.sqrt(0.0001), lower=0)
+        mu_mu_go = pm.Uniform('mu_mu_go', lower=0, upper=1000)
         sigma_mu_go = pm.Uniform('sigma_mu_go', lower=0, upper=300)
-        mu_sigma_go = pm.TruncatedNormal('mu_sigma_go', mu=100, sigma=1/pm.math.sqrt(0.001), lower=0)
+        mu_sigma_go = pm.Uniform('mu_sigma_go', lower=0, upper=200)
         sigma_sigma_go = pm.Uniform('sigma_sigma_go', lower=0, upper=200)
-        mu_tau_go = pm.TruncatedNormal('mu_tau_go', mu=80, sigma=1/pm.math.sqrt(0.001), lower=0)
+        mu_tau_go = pm.Uniform('mu_tau_go', lower=0, upper=200)
         sigma_tau_go = pm.Uniform('sigma_tau_go', lower=0, upper=200)
 
-        mu_mu_stop = pm.TruncatedNormal('mu_mu_stop', mu=200, sigma=1/pm.math.sqrt(0.0001), lower=0)
+        mu_mu_stop = pm.Uniform('mu_mu_stop', lower=0, upper=1000)
         sigma_mu_stop = pm.Uniform('sigma_mu_stop', lower=0, upper=200)
-        mu_sigma_stop = pm.TruncatedNormal('mu_sigma_stop', mu=40, sigma=1/pm.math.sqrt(0.001), lower=0)
+        mu_sigma_stop = pm.Uniform('mu_sigma_stop', lower=0, upper=100)
         sigma_sigma_stop = pm.Uniform('sigma_sigma_stop', lower=0, upper=100)
-        mu_tau_stop = pm.TruncatedNormal('mu_tau_stop', mu=30, sigma=1/pm.math.sqrt(0.001), lower=0)
+        mu_tau_stop = pm.Uniform('mu_tau_stop', lower=0, upper=100)
         sigma_tau_stop = pm.Uniform('sigma_tau_stop', lower=0, upper=100)
         
         mu_p_tf = pm.TruncatedNormal('mu_p_tf', mu=0, sigma=1, lower=-6, upper=6)
-        sigma_p_tf = pm.Uniform('sigma_p_tf', lower=0, upper=5)
+        sigma_p_tf = pm.Uniform('sigma_p_tf', lower=0.01, upper=5)
 
         # Participant-specific parameters
-        mu_go = pm.TruncatedNormal('mu_go', mu=mu_mu_go, sigma=1/pm.math.sqr(sigma_mu_go), lower=0)
-        sigma_go = pm.TruncatedNormal('sigma_go', mu=mu_sigma_go, sigma=1/pm.math.sqr(sigma_sigma_go), lower=1)
-        tau_go = pm.TruncatedNormal('tau_go', mu=mu_tau_go, sigma=1/pm.math.sqr(sigma_tau_go), lower=1)
-        mu_stop = pm.TruncatedNormal('mu_stop', mu=mu_mu_stop, sigma=1/pm.math.sqr(sigma_mu_stop), lower=0)
-        sigma_stop = pm.TruncatedNormal('sigma_stop', mu=mu_sigma_stop, sigma=1/pm.math.sqr(sigma_sigma_stop), lower=1)
-        tau_stop = pm.TruncatedNormal('tau_stop', mu=mu_tau_stop, sigma=1/pm.math.sqr(sigma_tau_stop), lower=1)
+        mu_go = pm.TruncatedNormal('mu_go', mu=mu_mu_go, sigma=sigma_mu_go, lower=0, upper=1000)
+        sigma_go = pm.TruncatedNormal('sigma_go', mu=mu_sigma_go, sigma=sigma_sigma_go, lower=1, upper=200)
+        tau_go = pm.TruncatedNormal('tau_go', mu=mu_tau_go, sigma=sigma_tau_go, lower=1, upper=200)
+        mu_stop = pm.TruncatedNormal('mu_stop', mu=mu_mu_stop, sigma=sigma_mu_stop, lower=0, upper=1000)
+        sigma_stop = pm.TruncatedNormal('sigma_stop', mu=mu_sigma_stop, sigma=sigma_sigma_stop, lower=1, upper=100)
+        tau_stop = pm.TruncatedNormal('tau_stop', mu=mu_tau_stop, sigma=sigma_tau_stop, lower=1, upper=100)
 
         p_tf_probit = pm.TruncatedNormal('p_tf_probit', mu=mu_p_tf, sigma=sigma_p_tf, lower=-6, upper=6)
         p_tf = pm.Deterministic('p_tf', pm.invprobit(p_tf_probit))
@@ -69,7 +95,6 @@ def main():
 
     # Conditional execution based on input
     all_trials = []
-    p_tf = 0.2
     for i in range(N):
         participant_id = i
 
