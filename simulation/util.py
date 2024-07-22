@@ -21,11 +21,14 @@ def simulate_exgaussian(mu, sigma, tau):
     """
     # K is the shape parameter for the exponential part
     K = tau / sigma
-    
-    # Simulate Ex-Gaussian distribution using scipy's exponnorm which is a combination of exponential and normal distributions
-    simulated_value = exponnorm.rvs(K=K, loc=mu, scale=sigma, size=1)[0]
-    
-    return simulated_value
+
+    # Simulate Ex-Gaussian distribution using scipy's exponnorm which 
+    # is a combination of exponential and normal distributions
+    while True:
+        simulated_value = exponnorm.rvs(K=K, loc=mu, scale=sigma, size=1)[0]
+        # Regenerate until a non-negative value is obtained
+        if simulated_value >= 0:
+            return simulated_value
 
 def simulate_trials_fixed_SSD(trial_type_sequence, ssd_set, p_tf,
                               mu_go, sigma_go, tau_go, 
