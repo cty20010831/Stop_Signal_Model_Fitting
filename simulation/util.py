@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import random
-from scipy.stats import norm, exponnorm, truncnorm
+from scipy.stats import norm, exponnorm
 
 '''
 Functions related to simulation
