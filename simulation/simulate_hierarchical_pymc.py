@@ -11,9 +11,9 @@ SEED = 42
 # Constants for the simulation
 N = 100  # Number of participants
 T = 50  # Total number of trials per participant
-trial_type_sequence = ["go", "go", "go", "go", "stop"] * 10
-fixed_ssd_set = [80, 160, 240, 320, 400, 480]
-starting_staircase_ssd = 200
+TRIAL_TYPE_SEQUENCE = ["go", "go", "go", "go", "stop"] * 10
+FIXED_SSD_SET = [80, 160, 240, 320, 400, 480]
+STARTING_STAIRCASE_SSD = 200
 
 def main():
     # Get the directory where this script is located at
@@ -104,13 +104,13 @@ def main():
         if args.type == 'fixed':
             # Simulate fixed SSD dataset
             trial_df = simulate_trials_fixed_SSD(
-                trial_type_sequence, fixed_ssd_set, p_tf, 
+                TRIAL_TYPE_SEQUENCE, FIXED_SSD_SET, p_tf, 
                 mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop
             )
         elif args.type == 'staircase':
             # Simulate staircase SSD dataset
             trial_df = simulate_trials_staircase_SSD(
-                trial_type_sequence, starting_staircase_ssd, p_tf,
+                TRIAL_TYPE_SEQUENCE, STARTING_STAIRCASE_SSD, p_tf,
                 mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop
             )
         

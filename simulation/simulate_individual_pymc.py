@@ -11,9 +11,9 @@ SEED = 42
 # Define some constants for this simulation
 N = 100  # number of participants
 T = 50  # total number of trials
-trial_type_sequence = ["go", "go", "go", "go", "stop"] * 10
-fixed_ssd_set = [80, 160, 240, 320, 400, 480]
-starting_staircase_ssd = 200
+TRIAL_TYPE_SEQUENCE = ["go", "stop", "go", "stop", "go"] * 10
+FIXED_SSD_SET = [80, 160, 240, 320, 400, 480]
+STARTING_STAIRCASE_SSD = 200
 
 def main():
     # Get the directory where this script is located at
@@ -28,13 +28,13 @@ def main():
     # Sample parameters based on prior distribution
     with pm.Model():
         # Define the distributions for the parameters using PyMC
-        mu_go = pm.Uniform('mu_go', lower=1, upper=1000)
-        sigma_go = pm.Uniform('sigma_go', lower=1, upper=300)
-        tau_go = pm.Uniform('tau_go', lower=1, upper=300)
-        mu_stop = pm.Uniform('mu_stop', lower=1, upper=600)
-        sigma_stop = pm.Uniform('sigma_stop', lower=1, upper=250)
-        tau_stop = pm.Uniform('tau_stop', lower=1, upper=250)
-        p_tf = pm.Uniform('p_tf', lower=0.0, upper=1.0)
+        mu_go = pm.Uniform('mu_go', lower=0.001, upper=1000, initval=500)
+        sigma_go = pm.Uniform('sigma_go', lower=1, upper=500, initval=50)
+        tau_go = pm.Uniform('tau_go', lower=1, upper=500, initval=50)
+        mu_stop = pm.Uniform('mu_stop', lower=0.001, upper=1000, initval=300)
+        sigma_stop = pm.Uniform('sigma_stop', lower=1, upper=500, initval=50)
+        tau_stop = pm.Uniform('tau_stop', lower=1, upper=500, initval=50)
+        p_tf = pm.Uniform('p_tf', lower=0.0, upper=1.0, initval=0.5)
 
     # Draw N samples from the prior distribution
     draws = pm.draw([mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop, p_tf], 
@@ -76,13 +76,13 @@ def main():
         if args.type == 'fixed':
             # Simulate fixed SSD dataset
             trial_df = simulate_trials_fixed_SSD(
-                trial_type_sequence, fixed_ssd_set, p_tf, 
+                TRIAL_TYPE_SEQUENCE, FIXED_SSD_SET, p_tf, 
                 mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop
             )
         elif args.type == 'staircase':
             # Simulate staircase SSD dataset
             trial_df = simulate_trials_staircase_SSD(
-                trial_type_sequence, starting_staircase_ssd, p_tf,
+                TRIAL_TYPE_SEQUENCE, STARTING_STAIRCASE_SSD, p_tf,
                 mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop
             )
     
