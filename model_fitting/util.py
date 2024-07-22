@@ -7,7 +7,14 @@ or priors requires using PyTensor expressions rather than NumPy or Python code.
 import numpy as np
 import pytensor.tensor as pt
 import pymc as pm
-from pytensor.tensor.extra_ops import unique
+
+# Import from simulaion.util
+import sys
+sys.path.append("..") 
+from simulation.util import simulate_trials_fixed_SSD, simulate_trials_staircase_SSD
+# Use the same trial_type sequence and fixed_ssd_set (or starting staircase ssd) 
+# as in simulation (or later in real data)
+from simulation.simulate_hierarchical_pymc import TRIAL_TYPE_SEQUENCE, FIXED_SSD_SET, STARTING_STAIRCASE_SSD
 
 def stop_respond_likelihood(t_r, mu_go, sigma_go, tau_go, 
                             mu_stop, sigma_stop, tau_stop, 
@@ -155,3 +162,50 @@ def successful_inhibit_log_likelihood(mu_go, sigma_go, tau_go,
     
     return pt.log(likelihood)
 
+def posterior_predictive_sampling(trace, type, ssd_set=FIXED_SSD_SET, 
+                                  trial_type_sequence=TRIAL_TYPE_SEQUENCE):
+    # Extract the number of chains, draws, and participants
+    n_chains, n_draws, n_participants = trace.posterior['mu_go'].shape
+    
+    # Flatten the samples to have shape (n_chain * n_draws, n_participants)
+    mu_go_samples = trace.posterior['mu_go'].values.reshape(-1, n_participants)
+    sigma_go_samples = trace.posterior['sigma_go'].values.reshape(-1, n_participants)
+    tau_go_samples = trace.posterior['tau_go'].values.reshape(-1, n_participants)
+    mu_stop_samples = trace.posterior['mu_stop'].values.reshape(-1, n_participants)
+    sigma_stop_samples = trace.posterior['sigma_stop'].values.reshape(-1, n_participants)
+    tau_stop_samples = trace.posterior['tau_stop'].values.reshape(-1, n_participants)
+    p_tf_samples = trace.posterior['p_tf'].values.reshape(-1, n_participants)
+    
+    # Calculate the total number of samples (for each participant)
+    num_samples = n_chains * n_draws
+
+    all_simulated_trials = []
+
+    for i in range(num_samples):
+        for participant in range(n_participants):
+            mu_go = mu_go_samples[i, participant]
+            sigma_go = sigma_go_samples[i, participant]
+            tau_go = tau_go_samples[i, participant]
+            mu_stop = mu_stop_samples[i, participant]
+            sigma_stop = sigma_stop_samples[i, participant]
+            tau_stop = tau_stop_samples[i, participant]
+            p_tf = p_tf_samples[i, participant]
+
+            if type == 'fixed':
+                # Simulate fixed SSD dataset
+                simulated_trials = simulate_trials_fixed_SSD(
+                    trial_type_sequence, ssd_set, p_tf,
+                    mu_go, sigma_go, tau_go, 
+                    mu_stop, sigma_stop, tau_stop
+                )
+            
+            elif type == 'staircase':
+                # Simulate staircase SSD dataset
+                simulated_trials = simulate_trials_staircase_SSD(
+                    trial_type_sequence, ssd_set, p_tf,
+                    mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop
+                )
+
+            all_simulated_trials.append(simulated_trials)
+
+    return all_simulated_trials
