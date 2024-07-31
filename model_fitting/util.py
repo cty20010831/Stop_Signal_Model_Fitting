@@ -12,13 +12,12 @@ import pymc as pm
 import sys
 sys.path.append("..") 
 from simulation.util import simulate_trials_fixed_SSD, simulate_trials_staircase_SSD
-# Use the same trial_type sequence and fixed_ssd_set (or starting staircase ssd) 
-# as in simulation (or later in real data)
-from simulation.simulate_hierarchical_pymc import TRIAL_TYPE_SEQUENCE, FIXED_SSD_SET, STARTING_STAIRCASE_SSD
+# Use the same trial_type sequence and fixed_ssd_set (or starting staircase ssd) as in simulation (or later in real data)
+# from simulation.simulate_hierarchical_pymc import TRIAL_TYPE_SEQUENCE, FIXED_SSD_SET, STARTING_STAIRCASE_SSD
 
-def stop_respond_likelihood(t_r, mu_go, sigma_go, tau_go, 
-                            mu_stop, sigma_stop, tau_stop, 
-                            p_tf, ssd):
+def stop_respond_log_likelihood(t_r, mu_go, sigma_go, tau_go, 
+                                mu_stop, sigma_stop, tau_stop, 
+                                p_tf, ssd):
     """
     Calculate the log-likelihood for a stop-signal response time model 
     using Ex-Gaussian distributions.
@@ -43,8 +42,6 @@ def stop_respond_likelihood(t_r, mu_go, sigma_go, tau_go,
         Probability of triggering the stop process.
     ssd : array-like
         Stop-signal delays.
-    epsilon : float, optional
-        Small constant to avoid numerical instability, by default 1e-10.
 
     Returns
     -------
@@ -65,14 +62,80 @@ def stop_respond_likelihood(t_r, mu_go, sigma_go, tau_go,
     
     return pt.log(likelihood)
 
+def stop_respond_log_likelihood_no_p_tf(t_r, mu_go, sigma_go, tau_go, 
+                                    mu_stop, sigma_stop, tau_stop, ssd):
+    """
+    Calculate the log-likelihood for a stop-signal response time model 
+    using Ex-Gaussian distributions.
+
+    Parameters
+    ----------
+    t_r : array-like
+        Response times.
+    mu_go : float
+        Mean of the Gaussian component for the go process.
+    sigma_go : float
+        Standard deviation of the Gaussian component for the go process.
+    tau_go : float
+        Mean (or rate parameter) of the exponential component for the go process.
+    mu_stop : float
+        Mean of the Gaussian component for the stop process.
+    sigma_stop : float
+        Standard deviation of the Gaussian component for the stop process.
+    tau_stop : float
+        Mean (or rate parameter) of the exponential component for the stop process.
+    ssd : array-like
+        Stop-signal delays.
+
+    Returns
+    -------
+    pytensor.tensor
+        Log-likelihood of the response times given the parameters.
+    """
+    # Derive the Ex-Gaussian PDF and CDF using PyMC functions
+    exgaussian_go = pm.ExGaussian.dist(mu=mu_go, sigma=sigma_go, nu=tau_go)
+    exgaussian_stop = pm.ExGaussian.dist(mu=mu_stop, sigma=sigma_stop, nu=tau_stop)
+    
+    # Focus on the relevant time interval for determining if the stop process 
+    # finished before the response was made (specifically, t_r - ssd_array)
+    likelihood = (1 - pt.exp(pm.logcdf(exgaussian_stop, t_r - ssd))) * pt.exp(pm.logp(exgaussian_go, t_r))
+    
+    return pt.log(likelihood)
+
 def precompute_legendre_quadrature(ssd, upper_bound, n):
-    """Gauss-Legendre quadrature nodes and weights."""
+    """
+    Precompute Gauss-Legendre quadrature nodes and weights for numerical integration.
+
+    Parameters
+    ----------
+    ssd : array-like
+        Array of stop-signal delays (SSD) for each successful inhibition trial.
+    upper_bound : array-like
+        Upper bound(s) of response time. Can be a single value applied to all participants
+        or an array with an upper bound for each participant.
+    n : int
+        Number of Gauss-Legendre quadrature points.
+
+    Returns
+    -------
+    transformed_nodes : numpy.ndarray
+        Transformed nodes for Gauss-Legendre quadrature integration.
+    transformed_weights : numpy.ndarray
+        Transformed weights for Gauss-Legendre quadrature integration.
+    """
     nodes, weights = np.polynomial.legendre.leggauss(n)
     
-    # Transform nodes from [-1, 1] to [lower_bound, upper_bound]
-    lower_bound = np.array(ssd)[None, :]  # Expand dims to (1, len(ssd))
-    upper_bound = np.array(upper_bound)[:, None]  # Expand dims to (len(upper_bound), 1)
-    
+    if len(upper_bound) == 1:
+        # Deal with the case when there is only one upper bound for all participants
+        # Transform nodes from [-1, 1] to [lower_bound, upper_bound]
+        lower_bound = np.array(ssd)[None, :]  # Expand dims to (1, len(ssd))
+        upper_bound = np.array(upper_bound)[:, None]  # Expand dims to (len(upper_bound), 1)
+    else:
+        # Deal with the case when there is an upper_bound of response time for each participant
+        # Transform nodes from [-1, 1] to [lower_bound, upper_bound]
+        lower_bound = np.array(ssd)
+        upper_bound = np.array(upper_bound)
+
     transformed_nodes = 0.5 * (nodes[:, None] + 1) * (upper_bound - lower_bound) + lower_bound
     transformed_weights = weights[:, None] * 0.5 * (upper_bound - lower_bound)
 
@@ -80,7 +143,33 @@ def precompute_legendre_quadrature(ssd, upper_bound, n):
 
 def integrate_cexgauss(nodes, weights, mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop, ssd):
     """
-    Numerical integration of the Censored Ex-Gaussian using Gauss-Legendre quadrature.
+    Perform numerical integration of the Censored Ex-Gaussian using Gauss-Legendre quadrature.
+
+    Parameters
+    ----------
+    nodes : array-like
+        Transformed nodes for Gauss-Legendre quadrature rule calculation.
+    weights : array-like
+        Transformed weights for Gauss-Legendre quadrature rule calculation.
+    mu_go : float
+        Mean of the Gaussian component for the go process.
+    sigma_go : float
+        Standard deviation of the Gaussian component for the go process.
+    tau_go : float
+        Mean (or rate parameter) of the exponential component for the go process.
+    mu_stop : float
+        Mean of the Gaussian component for the stop process.
+    sigma_stop : float
+        Standard deviation of the Gaussian component for the stop process.
+    tau_stop : float
+        Mean (or rate parameter) of the exponential component for the stop process.
+    ssd : array-like
+        Stop-signal delays.
+
+    Returns
+    -------
+    pytensor.tensor
+        Result of the numerical integration for the Censored Ex-Gaussian.
     """
     # Derive the Ex-Gaussian PDF and CDF using PyMC functions
     exgaussian_go = pm.ExGaussian.dist(mu=mu_go, sigma=sigma_go, nu=tau_go)
@@ -138,6 +227,10 @@ def successful_inhibit_log_likelihood(mu_go, sigma_go, tau_go,
     # Derive the likelihood for each trial
     likelihood = (1 - p_tf) * total_integral
 
+    # The following commented-out part was used to count each respective ssd for 
+    # each participant and caluclate there respective integral only once 
+    # so that calculating the sum of log-likelihoods will be more efficient
+
     # # Get unique SSDs and their counts
     # unique_ssd, unique_indices, inverse_indices, counts = unique(
     #     ssd, return_index=True, return_inverse=True, return_counts=True
@@ -162,50 +255,91 @@ def successful_inhibit_log_likelihood(mu_go, sigma_go, tau_go,
     
     return pt.log(likelihood)
 
-def posterior_predictive_sampling(trace, type, ssd_set=FIXED_SSD_SET, 
-                                  trial_type_sequence=TRIAL_TYPE_SEQUENCE):
-    # Extract the number of chains, draws, and participants
-    n_chains, n_draws, n_participants = trace.posterior['mu_go'].shape
+def successful_inhibit_log_likelihood_no_p_tf(mu_go, sigma_go, tau_go, 
+                                              mu_stop, sigma_stop, tau_stop, 
+                                              ssd, nodes, weights):
+    """
+    Calculate the log-likelihood for successful inhibition in a stop-signal 
+    task using Legendre quadrature rule.
+
+    Parameters
+    ----------
+    mu_go: float
+        Mean of the Gaussian component for the go process.
+    sigma_go: float
+        Standard deviation of the Gaussian component for the go process.
+    tau_go: float
+        Mean (or rate parameter) of the exponential component for the go process.
+    mu_stop: float
+        Mean of the Gaussian component for the stop process.
+    sigma_stop: float
+        Standard deviation of the Gaussian component for the stop process.
+    tau_stop: float
+        Mean (or rate parameter) of the exponential component for the stop process.
+    ssd: array-like
+        Stop-signal delays.
+    nodes: array-like
+        Transformed nodes for Legendre quadrature rule calculation.
+    weights: array-like
+        Transformed weights for Legendre quadrature rule calculation.
+
+    Returns
+    -------
+    pytensor.tensor
+        Log-likelihood of the successful inhibition given the parameters.
+    """
+
+    likelihood = integrate_cexgauss(nodes, weights, 
+                                    mu_go, sigma_go, tau_go, 
+                                    mu_stop, sigma_stop, tau_stop, 
+                                    ssd)
     
-    # Flatten the samples to have shape (n_chain * n_draws, n_participants)
-    mu_go_samples = trace.posterior['mu_go'].values.reshape(-1, n_participants)
-    sigma_go_samples = trace.posterior['sigma_go'].values.reshape(-1, n_participants)
-    tau_go_samples = trace.posterior['tau_go'].values.reshape(-1, n_participants)
-    mu_stop_samples = trace.posterior['mu_stop'].values.reshape(-1, n_participants)
-    sigma_stop_samples = trace.posterior['sigma_stop'].values.reshape(-1, n_participants)
-    tau_stop_samples = trace.posterior['tau_stop'].values.reshape(-1, n_participants)
-    p_tf_samples = trace.posterior['p_tf'].values.reshape(-1, n_participants)
+    return pt.log(likelihood)
+
+# def posterior_predictive_sampling(trace, type, ssd_set=FIXED_SSD_SET, 
+#                                   trial_type_sequence=TRIAL_TYPE_SEQUENCE):
+#     # Extract the number of chains, draws, and participants
+#     n_chains, n_draws, n_participants = trace.posterior['mu_go'].shape
     
-    # Calculate the total number of samples (for each participant)
-    num_samples = n_chains * n_draws
+#     # Flatten the samples to have shape (n_chain * n_draws, n_participants)
+#     mu_go_samples = trace.posterior['mu_go'].values.reshape(-1, n_participants)
+#     sigma_go_samples = trace.posterior['sigma_go'].values.reshape(-1, n_participants)
+#     tau_go_samples = trace.posterior['tau_go'].values.reshape(-1, n_participants)
+#     mu_stop_samples = trace.posterior['mu_stop'].values.reshape(-1, n_participants)
+#     sigma_stop_samples = trace.posterior['sigma_stop'].values.reshape(-1, n_participants)
+#     tau_stop_samples = trace.posterior['tau_stop'].values.reshape(-1, n_participants)
+#     p_tf_samples = trace.posterior['p_tf'].values.reshape(-1, n_participants)
+    
+#     # Calculate the total number of samples (for each participant)
+#     num_samples = n_chains * n_draws
 
-    all_simulated_trials = []
+#     all_simulated_trials = []
 
-    for i in range(num_samples):
-        for participant in range(n_participants):
-            mu_go = mu_go_samples[i, participant]
-            sigma_go = sigma_go_samples[i, participant]
-            tau_go = tau_go_samples[i, participant]
-            mu_stop = mu_stop_samples[i, participant]
-            sigma_stop = sigma_stop_samples[i, participant]
-            tau_stop = tau_stop_samples[i, participant]
-            p_tf = p_tf_samples[i, participant]
+#     for i in range(num_samples):
+#         for participant in range(n_participants):
+#             mu_go = mu_go_samples[i, participant]
+#             sigma_go = sigma_go_samples[i, participant]
+#             tau_go = tau_go_samples[i, participant]
+#             mu_stop = mu_stop_samples[i, participant]
+#             sigma_stop = sigma_stop_samples[i, participant]
+#             tau_stop = tau_stop_samples[i, participant]
+#             p_tf = p_tf_samples[i, participant]
 
-            if type == 'fixed':
-                # Simulate fixed SSD dataset
-                simulated_trials = simulate_trials_fixed_SSD(
-                    trial_type_sequence, ssd_set, p_tf,
-                    mu_go, sigma_go, tau_go, 
-                    mu_stop, sigma_stop, tau_stop
-                )
+#             if type == 'fixed':
+#                 # Simulate fixed SSD dataset
+#                 simulated_trials = simulate_trials_fixed_SSD(
+#                     trial_type_sequence, ssd_set, p_tf,
+#                     mu_go, sigma_go, tau_go, 
+#                     mu_stop, sigma_stop, tau_stop
+#                 )
             
-            elif type == 'staircase':
-                # Simulate staircase SSD dataset
-                simulated_trials = simulate_trials_staircase_SSD(
-                    trial_type_sequence, ssd_set, p_tf,
-                    mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop
-                )
+#             elif type == 'staircase':
+#                 # Simulate staircase SSD dataset
+#                 simulated_trials = simulate_trials_staircase_SSD(
+#                     trial_type_sequence, ssd_set, p_tf,
+#                     mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop
+#                 )
 
-            all_simulated_trials.append(simulated_trials)
+#             all_simulated_trials.append(simulated_trials)
 
-    return all_simulated_trials
+#     return all_simulated_trials
