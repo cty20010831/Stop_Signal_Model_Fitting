@@ -1,3 +1,5 @@
 .DS_Store
 
 __pycache__
+
+model_fitting/saved_trace
