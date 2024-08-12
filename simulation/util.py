@@ -118,6 +118,88 @@ def simulate_trials_fixed_SSD(trial_type_sequence, ssd_set, p_tf,
 
     return pd.DataFrame(results)
 
+def simulate_trials_fixed_SSD_no_p_tf(trial_type_sequence, ssd_set,
+                                      mu_go, sigma_go, tau_go, 
+                                      mu_stop, sigma_stop, tau_stop):
+    """
+    Simulate one synthetic experiment round of trials for a subject following the 
+    pre-determined trial sequence (with fixed SSD). This simulation includes 
+    both 'go' and 'stop' trials, with 'stop' trials having predetermined 
+    stop-signal delays (SSDs) from a specified set, presented in random order 
+    (with equal probability).
+
+    Parameters
+    ---------- 
+    trial_type_sequence: 
+        list of strings, where each string is either 'go' or 'stop', indicating 
+        the type of trial to simulate in sequence. 
+        Example: ['go', 'stop', 'go', 'stop', 'go']
+    ssd_set: 
+        array or list of integers, specifying the set of SSDs (in milliseconds)
+        to be used for the 'stop' trials. SSDs are assigned randomly to each 
+        'stop' trial. 
+        Example: [100, 200, 300]
+    mu_go: 
+        mean of the Gaussian component of the Ex-Gaussian distribution
+        for the 'go' reaction times (RTs).
+    sigma_go: 
+        standard deviation of the Gaussian component of the Ex-Gaussian 
+        distribution for the 'go' RTs.
+    tau_go: 
+        decay parameter (mean of the exponential component) of the Ex-Gaussian 
+        distribution for the 'go' RTs.
+    mu_stop: 
+        mean of the Gaussian component of the Ex-Gaussian distribution for 
+        the 'stop' reaction times (SSRTs).
+    sigma_stop:
+        standard deviation of the Gaussian component of the Ex-Gaussian 
+        distribution for the SSRTs.
+    tau_stop: 
+        decay parameter of the Ex-Gaussian distribution for the SSRTs.
+
+    Returns
+    -------
+    A pandas DataFrame containing the outcomes of each trial. Columns include:
+        - 'trial_type': type of trial ('go' or 'stop').
+        - 'ssd' (only for 'stop' trials): the stop-signal delay used in that trial.
+        - 'observed_rt': the observed simulated reaction time 
+            (None for successful inhibitions in stop trials).
+        - 'ss_rt': unobserved reaction time for stop signals 
+            (None for go trials).
+        - 'outcome': describes the result of the trial 
+            ('go', 'stop-respond', or 'successful inhibition').
+    """
+    results = []
+    ssd_choices = np.random.choice(
+        ssd_set, 
+        size=len([t for t in trial_type_sequence if t == 'stop']), 
+        replace=True
+    )
+
+    ssd_index = 0
+
+    for t in trial_type_sequence:
+        trial_data = {'trial_type': t, 'ssd': None, 'observed_rt': None, 'ss_rt': None, 'outcome': None}
+
+        if t == 'stop':
+            ssd = ssd_choices[ssd_index]
+            ssd_index += 1
+
+            go_rt = simulate_exgaussian(mu_go, sigma_go, tau_go)
+            ssrt = simulate_exgaussian(mu_stop, sigma_stop, tau_stop)
+
+            if go_rt > ssrt + ssd:
+                trial_data.update({'ssd': ssd, 'ss_rt': ssrt, 'outcome': 'successful inhibition'})
+            else:
+                trial_data.update({'ssd': ssd, 'observed_rt': go_rt, 'ss_rt': ssrt, 'outcome': 'stop-respond'})
+        else:
+            go_rt = simulate_exgaussian(mu_go, sigma_go, tau_go)
+            trial_data.update({'observed_rt': go_rt, 'outcome': 'go'})
+
+        results.append(trial_data)
+
+    return pd.DataFrame(results)
+
 def simulate_trials_staircase_SSD(trial_type_sequence, starting_ssd, p_tf,
                                   mu_go, sigma_go, tau_go, 
                                   mu_stop, sigma_stop, tau_stop):
