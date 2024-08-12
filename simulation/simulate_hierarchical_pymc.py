@@ -5,6 +5,11 @@ import argparse
 
 from util import simulate_trials_staircase_SSD, simulate_trials_fixed_SSD_no_p_tf
 
+# Set random seed for reproducibility
+SEED = 42
+FIXED_SSD_SET = [80, 160, 240, 320, 400, 480]
+STARTING_STAIRCASE_SSD = 200
+
 def main():
     # Get the directory where this script is located at
     dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,15 +28,10 @@ def main():
     # Parse command-line arguments
     args = parser.parse_args()
     
-    # Set random seed for reproducibility
-    SEED = 42
-
     # Constants for the simulation
     N, T = args.N, args.T
     # TRIAL_TYPE_SEQUENCE = ["go", "go", "go", "go", "stop"] * int(T / 5)
     TRIAL_TYPE_SEQUENCE = ["go", "stop", "stop", "stop", "stop"] * int(T / 5)
-    FIXED_SSD_SET = [80, 160, 240, 320, 400, 480]
-    STARTING_STAIRCASE_SSD = 200
 
     # Sample (individual-level) parameters from hierarchical prior distribution
     with pm.Model():
