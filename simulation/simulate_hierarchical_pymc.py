@@ -14,10 +14,10 @@ def main():
     parser.add_argument('--type', type=str, choices=['fixed', 'staircase'], required=True,
                         help='Type of SSD simulation to perform: "fixed" or "staircase".')
     
-    parser.add_argument('--N', type=int, default=100, required=True,
+    parser.add_argument('--N', type=int, default=100,
                         help='Number of participants.')
     
-    parser.add_argument('--T', type=int, default=250, required=True,
+    parser.add_argument('--T', type=int, default=250,
                         help='Total number of trials per participant.')
 
     # Parse command-line arguments
