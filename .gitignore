@@ -3,3 +3,9 @@
 __pycache__
 
 model_fitting/saved_trace
+
+simulation/simulated_data
+simulation/true_param
+
+# Temporarily ignore the original model fitting notebook while debugging
+model_fitting/model_fitting.ipynb
