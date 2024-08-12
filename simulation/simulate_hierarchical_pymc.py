@@ -3,17 +3,7 @@ import pymc as pm
 import pandas as pd
 import argparse
 
-from util import simulate_trials_fixed_SSD, simulate_trials_staircase_SSD
-
-# Set random seed for reproducibility
-SEED = 42
-
-# Constants for the simulation
-N = 100  # Number of participants
-T = 50  # Total number of trials per participant
-TRIAL_TYPE_SEQUENCE = ["go", "go", "go", "go", "stop"] * 10
-FIXED_SSD_SET = [80, 160, 240, 320, 400, 480]
-STARTING_STAIRCASE_SSD = 200
+from util import simulate_trials_staircase_SSD, simulate_trials_fixed_SSD_no_p_tf
 
 def main():
     # Get the directory where this script is located at
@@ -23,9 +13,25 @@ def main():
     parser = argparse.ArgumentParser(description='Simulate SSD trial data using hierarchical Bayesian models.')
     parser.add_argument('--type', type=str, choices=['fixed', 'staircase'], required=True,
                         help='Type of SSD simulation to perform: "fixed" or "staircase".')
+    
+    parser.add_argument('--N', type=int, default=100, required=True,
+                        help='Number of participants.')
+    
+    parser.add_argument('--T', type=int, default=250, required=True,
+                        help='Total number of trials per participant.')
 
     # Parse command-line arguments
     args = parser.parse_args()
+    
+    # Set random seed for reproducibility
+    SEED = 42
+
+    # Constants for the simulation
+    N, T = args.N, args.T
+    # TRIAL_TYPE_SEQUENCE = ["go", "go", "go", "go", "stop"] * int(T / 5)
+    TRIAL_TYPE_SEQUENCE = ["go", "stop", "stop", "stop", "stop"] * int(T / 5)
+    FIXED_SSD_SET = [80, 160, 240, 320, 400, 480]
+    STARTING_STAIRCASE_SSD = 200
 
     # Sample (individual-level) parameters from hierarchical prior distribution
     with pm.Model():
@@ -103,8 +109,13 @@ def main():
         
         if args.type == 'fixed':
             # Simulate fixed SSD dataset
-            trial_df = simulate_trials_fixed_SSD(
-                TRIAL_TYPE_SEQUENCE, FIXED_SSD_SET, p_tf, 
+            # trial_df = simulate_trials_fixed_SSD(
+            #     TRIAL_TYPE_SEQUENCE, FIXED_SSD_SET, p_tf, 
+            #     mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop
+            # )
+            # Simulate fixed SSD dataset with no p_tf
+            trial_df = simulate_trials_fixed_SSD_no_p_tf(
+                TRIAL_TYPE_SEQUENCE, FIXED_SSD_SET,
                 mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop
             )
         elif args.type == 'staircase':

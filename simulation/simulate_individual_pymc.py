@@ -5,16 +5,6 @@ import argparse
 
 from util import simulate_trials_fixed_SSD, simulate_trials_staircase_SSD
 
-# Set random seed
-SEED = 42
-
-# Define some constants for this simulation
-N = 100  # number of participants
-T = 50  # total number of trials
-TRIAL_TYPE_SEQUENCE = ["go", "stop", "go", "stop", "go"] * 10
-FIXED_SSD_SET = [80, 160, 240, 320, 400, 480]
-STARTING_STAIRCASE_SSD = 200
-
 def main():
     # Get the directory where this script is located at
     dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +13,24 @@ def main():
     parser = argparse.ArgumentParser(description='Simulate trial data for fixed or staircase SSD.')
     parser.add_argument('--type', type=str, choices=['fixed', 'staircase'], required=True,
                         help='Specify the type of data to generate: "fixed" for fixed SSD or "staircase" for staircase SSD.')
+    parser.add_argument('--N', type=int, default=100, required=True,
+                        help='Number of participants.')
+    
+    parser.add_argument('--T', type=int, default=250, required=True,
+                        help='Total number of trials per participant.')
+
+    # Parse command-line arguments
     args = parser.parse_args()
+    
+    # Set random seed for reproducibility
+    SEED = 42
+
+    # Constants for the simulation
+    N, T = args.N, args.T
+    # TRIAL_TYPE_SEQUENCE = ["go", "go", "go", "go", "stop"] * int(T / 5)
+    TRIAL_TYPE_SEQUENCE = ["go", "stop", "stop", "stop", "stop"] * int(T / 5)
+    FIXED_SSD_SET = [80, 160, 240, 320, 400, 480]
+    STARTING_STAIRCASE_SSD = 200
 
     # Sample parameters based on prior distribution
     with pm.Model():
