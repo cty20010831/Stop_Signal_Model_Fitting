@@ -9,6 +9,7 @@ from util import simulate_trials_fixed_SSD, simulate_trials_staircase_SSD
 SEED = 42
 FIXED_SSD_SET = [80, 160, 240, 320, 400, 480]
 STARTING_STAIRCASE_SSD = 200
+TRIAL_TYPE_SEQUENCE_BASE = ["go", "stop", "stop", "stop", "stop"]
 
 def main():
     # Get the directory where this script is located at
@@ -29,8 +30,8 @@ def main():
     
     # Constants for the simulation
     N, T = args.N, args.T
-    # TRIAL_TYPE_SEQUENCE = ["go", "go", "go", "go", "stop"] * int(T / 5)
-    TRIAL_TYPE_SEQUENCE = ["go", "stop", "stop", "stop", "stop"] * int(T / 5)
+    # TRIAL_TYPE_SEQUENCE = TRIAL_TYPE_SEQUENCE_BASE * int(T / 5)
+    TRIAL_TYPE_SEQUENCE = TRIAL_TYPE_SEQUENCE_BASE * int(T / 5)
 
     # Sample parameters based on prior distribution
     with pm.Model():
