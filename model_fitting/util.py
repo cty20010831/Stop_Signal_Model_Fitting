@@ -11,7 +11,7 @@ import pymc as pm
 # Import from simulaion.util
 import sys
 sys.path.append("..") 
-from simulation.util import simulate_trials_fixed_SSD, simulate_trials_staircase_SSD
+from simulation.util import simulate_trials_fixed_SSD, simulate_trials_fixed_SSD_no_p_tf, simulate_trials_staircase_SSD
 # Use the same trial_type sequence and fixed_ssd_set (or starting staircase ssd) as in simulation (or later in real data)
 # from simulation.simulate_hierarchical_pymc import TRIAL_TYPE_SEQUENCE, FIXED_SSD_SET, STARTING_STAIRCASE_SSD
 
@@ -296,50 +296,86 @@ def successful_inhibit_log_likelihood_no_p_tf(mu_go, sigma_go, tau_go,
     
     return pt.log(likelihood)
 
-# def posterior_predictive_sampling(trace, type, ssd_set=FIXED_SSD_SET, 
-#                                   trial_type_sequence=TRIAL_TYPE_SEQUENCE):
-#     # Extract the number of chains, draws, and participants
-#     n_chains, n_draws, n_participants = trace.posterior['mu_go'].shape
+def posterior_predictive_sampling(trace, task_type, ssd_set, trial_type_sequence, have_p_tf=True):
+    '''
+    Conduct posterior predictive check. 
+
+    Parameters
+    ----------
+        trace: InferenceData
+            trace from pymc model fitting
+        task_type: string
+            type of stop signal task experimental design (either "fixed" or "staircase)
+        ssd_set: list
+            a list of ssd values used in the experiment
+        trial_type_sequence: list
+            a list of trial types (e.g, ['go', 'stop', 'stop','stop','stop'])
+        have_p_tf: boolean
+            whether the model fitting contains estimating p_tf
+
+    Returns
+    -------
+    list
+        A list of simulated trial data for each sample.
+    '''
     
-#     # Flatten the samples to have shape (n_chain * n_draws, n_participants)
-#     mu_go_samples = trace.posterior['mu_go'].values.reshape(-1, n_participants)
-#     sigma_go_samples = trace.posterior['sigma_go'].values.reshape(-1, n_participants)
-#     tau_go_samples = trace.posterior['tau_go'].values.reshape(-1, n_participants)
-#     mu_stop_samples = trace.posterior['mu_stop'].values.reshape(-1, n_participants)
-#     sigma_stop_samples = trace.posterior['sigma_stop'].values.reshape(-1, n_participants)
-#     tau_stop_samples = trace.posterior['tau_stop'].values.reshape(-1, n_participants)
-#     p_tf_samples = trace.posterior['p_tf'].values.reshape(-1, n_participants)
+    # Check whether the input is correct or not
+    if task_type not in ["fixed", "staircase"]:
+            raise ValueError(f"Invalid task type: '{task_type}'. Must be either 'fixed' or 'staircase'.")
+
+    # Extract the number of chains, draws, and participants
+    n_chains, n_draws, n_participants = trace.posterior['mu_go'].shape
     
-#     # Calculate the total number of samples (for each participant)
-#     num_samples = n_chains * n_draws
+    # Flatten the samples to have shape (n_chain * n_draws, n_participants)
+    mu_go_samples = trace.posterior['mu_go'].values.reshape(-1, n_participants)
+    sigma_go_samples = trace.posterior['sigma_go'].values.reshape(-1, n_participants)
+    tau_go_samples = trace.posterior['tau_go'].values.reshape(-1, n_participants)
+    mu_stop_samples = trace.posterior['mu_stop'].values.reshape(-1, n_participants)
+    sigma_stop_samples = trace.posterior['sigma_stop'].values.reshape(-1, n_participants)
+    tau_stop_samples = trace.posterior['tau_stop'].values.reshape(-1, n_participants)
+    if have_p_tf:
+        p_tf_samples = trace.posterior['p_tf'].values.reshape(-1, n_participants)
+    
+    # Calculate the total number of samples (for each participant)
+    num_samples = n_chains * n_draws
 
-#     all_simulated_trials = []
+    all_simulated_trials = []
 
-#     for i in range(num_samples):
-#         for participant in range(n_participants):
-#             mu_go = mu_go_samples[i, participant]
-#             sigma_go = sigma_go_samples[i, participant]
-#             tau_go = tau_go_samples[i, participant]
-#             mu_stop = mu_stop_samples[i, participant]
-#             sigma_stop = sigma_stop_samples[i, participant]
-#             tau_stop = tau_stop_samples[i, participant]
-#             p_tf = p_tf_samples[i, participant]
+    for i in range(num_samples):
+        for participant in range(n_participants):
+            mu_go = mu_go_samples[i, participant]
+            sigma_go = sigma_go_samples[i, participant]
+            tau_go = tau_go_samples[i, participant]
+            mu_stop = mu_stop_samples[i, participant]
+            sigma_stop = sigma_stop_samples[i, participant]
+            tau_stop = tau_stop_samples[i, participant]
+            if have_p_tf:
+                p_tf = p_tf_samples[i, participant]
 
-#             if type == 'fixed':
-#                 # Simulate fixed SSD dataset
-#                 simulated_trials = simulate_trials_fixed_SSD(
-#                     trial_type_sequence, ssd_set, p_tf,
-#                     mu_go, sigma_go, tau_go, 
-#                     mu_stop, sigma_stop, tau_stop
-#                 )
-            
-#             elif type == 'staircase':
-#                 # Simulate staircase SSD dataset
-#                 simulated_trials = simulate_trials_staircase_SSD(
-#                     trial_type_sequence, ssd_set, p_tf,
-#                     mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop
-#                 )
+            if task_type == 'fixed':
+                # Simulate fixed SSD dataset
+                if have_p_tf:
+                    simulated_trials = simulate_trials_fixed_SSD(
+                        trial_type_sequence, ssd_set, p_tf,
+                        mu_go, sigma_go, tau_go, 
+                        mu_stop, sigma_stop, tau_stop
+                    )
+                else: 
+                    simulated_trials = simulate_trials_fixed_SSD_no_p_tf(
+                        trial_type_sequence, ssd_set,
+                        mu_go, sigma_go, tau_go, 
+                        mu_stop, sigma_stop, tau_stop
+                    )  
+            #######################
+            # Note, currently mostly focusing on fixed type, revise for staircase in future
+            #######################
+            elif task_type == 'staircase':
+                # Simulate staircase SSD dataset
+                simulated_trials = simulate_trials_staircase_SSD(
+                    trial_type_sequence, ssd_set, p_tf,
+                    mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop
+                )
 
-#             all_simulated_trials.append(simulated_trials)
+            all_simulated_trials.append(simulated_trials)
 
-#     return all_simulated_trials
+    return all_simulated_trials
