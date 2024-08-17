@@ -7,3 +7,4 @@ pytensor==2.22.1
 scipy==1.10.1
 seaborn==0.13.2
 xarray==2023.6.0
+gdown==5.2.0
