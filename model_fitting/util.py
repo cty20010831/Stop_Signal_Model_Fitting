@@ -7,13 +7,58 @@ or priors requires using PyTensor expressions rather than NumPy or Python code.
 import numpy as np
 import pytensor.tensor as pt
 import pymc as pm
+from pymc.math import logdiffexp
+from pymc.distributions.dist_math import normal_lcdf, log_normal, check_parameters
 
 # Import from simulaion.util
 import sys
 sys.path.append("..") 
 from simulation.util import simulate_trials_fixed_SSD, simulate_trials_fixed_SSD_no_p_tf, simulate_trials_staircase_SSD
-# Use the same trial_type sequence and fixed_ssd_set (or starting staircase ssd) as in simulation (or later in real data)
-# from simulation.simulate_hierarchical_pymc import TRIAL_TYPE_SEQUENCE, FIXED_SSD_SET, STARTING_STAIRCASE_SSD
+
+def logpdf_exgaussian(value, mu, sigma, tau):
+    res = pt.switch(
+            # Whether tau > 0.05 * sigma
+            pt.gt(tau, 0.05 * sigma),
+            # If True
+            (
+                -pt.log(tau)
+                + (mu - value) / tau
+                + 0.5 * (sigma / tau) ** 2
+                + normal_lcdf(mu + (sigma**2) / tau, sigma, value)
+            ),
+            # If False
+            log_normal(value, mean=mu, sigma=sigma),
+        )
+        
+    return check_parameters(
+        res,
+        sigma > 0,
+        tau > 0,
+        msg="nu > 0, sigma > 0",
+    )
+
+def logcdf_exgaussian(value, mu, sigma, tau):
+    res = pt.switch(
+        # Whether tau > 0.05 * sigma
+        pt.gt(tau, 0.05 * sigma),
+        # If True
+        logdiffexp(normal_lcdf(mu, sigma, value),
+                        (
+                            (mu - value) / tau
+                            + 0.5 * (sigma / tau) ** 2
+                            + normal_lcdf(mu + (sigma**2) / tau, sigma, value)
+                        ),
+                    ),
+        # If False
+        normal_lcdf(mu, sigma, value)
+    )
+
+    return check_parameters(
+            res,
+            sigma > 0,
+            tau > 0,
+            msg="sigma > 0, nu > 0",
+        )
 
 def stop_respond_log_likelihood(t_r, mu_go, sigma_go, tau_go, 
                                 mu_stop, sigma_stop, tau_stop, 
@@ -52,12 +97,13 @@ def stop_respond_log_likelihood(t_r, mu_go, sigma_go, tau_go,
     exgaussian_go = pm.ExGaussian.dist(mu=mu_go, sigma=sigma_go, nu=tau_go)
     exgaussian_stop = pm.ExGaussian.dist(mu=mu_stop, sigma=sigma_stop, nu=tau_stop)
     
-    failed_trigger = p_tf * pt.exp(pm.logp(exgaussian_go, t_r))
+    # failed_trigger = p_tf * pt.exp(pt.exp(pm.logp(exgaussian_go, t_r)))
+    failed_trigger = p_tf * pt.exp(logpdf_exgaussian(t_r, mu_go, sigma_go, tau_go))
     
     # Focus on the relevant time interval for determining if the stop process 
     # finished before the response was made (specifically, t_r - ssd_array)
-    successful_trigger = (1 - p_tf) * (1 - pt.exp(pm.logcdf(exgaussian_stop, t_r - ssd))) * pt.exp(pm.logp(exgaussian_go, t_r))
-    
+    # successful_trigger = (1 - p_tf) * (1 - pt.exp(pm.logcdf(exgaussian_stop, t_r - ssd))) * pt.exp(pm.logp(exgaussian_go, t_r))
+    successful_trigger = (1 - p_tf) * (1 - pt.exp(logcdf_exgaussian(t_r - ssd, mu_stop, sigma_stop, tau_stop))) * pt.exp(logpdf_exgaussian(t_r, mu_go, sigma_go, tau_go)) 
     likelihood = failed_trigger + successful_trigger
     
     return pt.log(likelihood)
@@ -98,7 +144,8 @@ def stop_respond_log_likelihood_no_p_tf(t_r, mu_go, sigma_go, tau_go,
     
     # Focus on the relevant time interval for determining if the stop process 
     # finished before the response was made (specifically, t_r - ssd_array)
-    likelihood = (1 - pt.exp(pm.logcdf(exgaussian_stop, t_r - ssd))) * pt.exp(pm.logp(exgaussian_go, t_r))
+    # likelihood = (1 - pt.exp(pm.logcdf(exgaussian_stop, t_r - ssd))) * pt.exp(pm.logp(exgaussian_go, t_r))
+    likelihood = (1 - pt.exp(logcdf_exgaussian(t_r - ssd, mu_stop, sigma_stop, tau_stop))) * pt.exp(logpdf_exgaussian(t_r, mu_go, sigma_go, tau_go)) 
     
     return pt.log(likelihood)
 
@@ -175,8 +222,10 @@ def integrate_cexgauss(nodes, weights, mu_go, sigma_go, tau_go, mu_stop, sigma_s
     exgaussian_go = pm.ExGaussian.dist(mu=mu_go, sigma=sigma_go, nu=tau_go)
     exgaussian_stop = pm.ExGaussian.dist(mu=mu_stop, sigma=sigma_stop, nu=tau_stop)
 
-    exgaussian_cdf_vals = pt.exp(pm.logcdf(exgaussian_go, nodes))
-    exgaussian_pdf_vals = pt.exp(pm.logp(exgaussian_stop, nodes - ssd))
+    # exgaussian_cdf_vals = pt.exp(pm.logcdf(exgaussian_go, nodes))
+    exgaussian_cdf_vals = pt.exp(logcdf_exgaussian(nodes, mu_go, sigma_go, tau_go))
+    # exgaussian_pdf_vals = pt.exp(pm.logp(exgaussian_stop, nodes - ssd))
+    exgaussian_pdf_vals = pt.exp(logpdf_exgaussian(nodes - ssd, mu_stop, sigma_stop, tau_stop))
 
     integrands = (1 - exgaussian_cdf_vals) * exgaussian_pdf_vals
     integrals = weights * integrands
