@@ -1,11 +1,14 @@
 .DS_Store
-
 __pycache__
+
+# Ignore the virtural environment
+venv
 
 # Saved trace or trials (dataframe) 
 model_fitting/saved_trace
 model_fitting/saved_trials_ppc
 
+# Simulated data and true parameter csv files
 simulation/simulated_data
 simulation/true_param
 
