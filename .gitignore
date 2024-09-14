@@ -4,6 +4,10 @@ __pycache__
 # Ignore the virtural environment
 venv
 
+# Ignore the BEESTS application from the original paper
+BEESTS_MAC_OSX
+BEESTS_Windows
+
 # Saved trace or trials (dataframe) 
 model_fitting/saved_trace
 model_fitting/saved_trials_ppc
