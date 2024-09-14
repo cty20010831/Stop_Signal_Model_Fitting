@@ -5,7 +5,17 @@ This repository serves as the testing base for implementing the [**stop signal r
 This project is in collaboration with Michael J. Frank and Alex Fengler from Brown University.
 
 ## Requirements
-It is recommended to run the code on the local machine by setting up a virtual environment (e.g., [venv](https://docs.python.org/3/library/venv.html) or [conda](https://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/)) that downloads the required packages:
+It is recommended to run the code on the local machine by setting up a virtual environment (e.g., [venv](https://docs.python.org/3/library/venv.html) or [conda](https://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/)). For example, you can create the virtual `venv`
+environment named **venv**:
+```bash
+# Create the virtual environment:
+python3.11 -m venv venv
+
+# Activate the virtual environment:
+source venv/bin/activate
+```
+
+Then, download the required packages:
 ```bash
 pip install -r requirements.txt
 ```
