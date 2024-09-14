@@ -20,9 +20,9 @@ Then, download the required packages:
 pip install -r requirements.txt
 ```
 
-The [requirements.txt](requirements.txt) is generated using [pipreqs](https://github.com/bndr/pipreqs) package, which is a convenient package to generate requirements.txt file based on imports:
+The [requirements.txt](requirements.txt) is generated using: 
 ```bash
-pipreqs --scan-notebooks
+pip freeze
 ```
 
 ## (Top-Level) Repository Structure
