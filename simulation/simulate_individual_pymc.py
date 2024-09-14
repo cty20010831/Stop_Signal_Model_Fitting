@@ -97,6 +97,10 @@ def main():
         trial_df['participant_id'] = participant_id
         all_trials.append(trial_df)
 
+    # Ensure the directories for saving data exist
+    os.makedirs(os.path.join(dir, 'true_param'), exist_ok=True)
+    os.makedirs(os.path.join(dir, 'simulated_data'), exist_ok=True)
+
     # Save simulated data and true parameters
     simulated_data = pd.concat(all_trials, ignore_index=True)
     simulated_data_file_name = os.path.join(dir, f"simulated_data/individual_simulated_data_{args.type}_SSD.csv")
