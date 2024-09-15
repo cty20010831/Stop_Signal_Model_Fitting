@@ -25,6 +25,9 @@ The [requirements.txt](requirements.txt) is generated using:
 pip freeze
 ```
 
+## Stop Signal Task
+As a classifical experimental paradigm to measure impulse control, the experimental design of the stop signal task (for model fitting) follows the one proposed by Frederick Verbruggen (charactrized by 25% of stop trials and staircase ssd). For more details, please refer to [his jspsych implementation of this task](https://github.com/fredvbrug/STOP-IT/tree/master/jsPsych_version). 
+
 ## (Top-Level) Repository Structure
     .
     ├── model_fitting/        # hierarchical and individual level model fitting
