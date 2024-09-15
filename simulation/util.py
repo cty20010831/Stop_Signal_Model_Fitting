@@ -269,7 +269,79 @@ def simulate_trials_staircase_SSD(trial_type_sequence, starting_ssd, p_tf,
             ssd = ssd + 50 if trial_data['outcome'] == 'successful inhibition' else ssd - 50
         else:
             go_rt = simulate_exgaussian(mu_go, sigma_go, tau_go)
-            trial_data.update({'rt': go_rt, 'outcome': 'go'})
+            trial_data.update({'observed_rt': go_rt, 'outcome': 'go'})
+
+        results.append(trial_data)
+
+    return pd.DataFrame(results)
+
+def simulate_trials_staircase_SSD_no_p_tf(trial_type_sequence, starting_ssd,
+                                          mu_go, sigma_go, tau_go, 
+                                          mu_stop, sigma_stop, tau_stop):
+    '''
+    Simulate synthetic experiment trials for a subject following the 
+    pre-determined trial sequence using a staircase SSD procedure without
+    considering the probability of trigger failure (p_tf).
+
+    Parameters
+    ---------- 
+    trial_type_sequence: 
+        List of strings, each 'go' or 'stop' indicating the type of trial.
+    starting_ssd: 
+        Initial SSD in milliseconds to start the staircase procedure.
+    mu_go: 
+        Mean of the Gaussian component of the Ex-Gaussian distribution
+        for the 'go' reaction times (RTs).
+    sigma_go: 
+        Standard deviation of the Gaussian component of the Ex-Gaussian 
+        distribution for the 'go' RTs.
+    tau_go: 
+        Decay parameter (mean of the exponential component) of the Ex-Gaussian 
+        distribution for the 'go' RTs.
+    mu_stop: 
+        Mean of the Gaussian component of the Ex-Gaussian distribution for 
+        the 'stop' reaction times (SSRTs).
+    sigma_stop:
+        Standard deviation of the Gaussian component of the Ex-Gaussian 
+        distribution for the SSRTs.
+    tau_stop: 
+        Decay parameter of the Ex-Gaussian distribution for the SSRTs.
+
+    Returns
+    -------
+    A pandas DataFrame containing the outcomes of each trial. Columns include:
+        - 'trial_type': type of trial ('go' or 'stop').
+        - 'ssd' (only for 'stop' trials): the stop-signal delay used in that trial.
+        - 'observed_rt': the observed simulated reaction time 
+            (None for successful inhibitions in stop trials).
+        - 'ss_rt': unobserved reaction time for stop signals 
+            (None for go trials).
+        - 'outcome': describes the result of the trial 
+            ('go', 'stop-respond', or 'successful inhibition').
+    '''
+    results = []
+    ssd = starting_ssd
+
+    for t in trial_type_sequence:
+        trial_data = {'trial_type': t, 'ssd': None, 'observed_rt': None, 'ss_rt': None, 'outcome': None}
+        
+        if t == 'stop':
+            trial_data['ssd'] = ssd
+
+            go_rt = simulate_exgaussian(mu_go, sigma_go, tau_go)
+            ssrt = simulate_exgaussian(mu_stop, sigma_stop, tau_stop)
+            
+            # Determine outcome without trigger failure probability
+            if go_rt > ssrt + ssd:
+                trial_data.update({'ss_rt': ssrt, 'outcome': 'successful inhibition'})
+            else:
+                trial_data.update({'observed_rt': go_rt, 'ss_rt': ssrt, 'outcome': 'stop-respond'})
+            
+            # Dynamically adjust ssd based on performance
+            ssd = ssd + 50 if trial_data['outcome'] == 'successful inhibition' else ssd - 50
+        else:
+            go_rt = simulate_exgaussian(mu_go, sigma_go, tau_go)
+            trial_data.update({'observed_rt': go_rt, 'outcome': 'go'})
 
         results.append(trial_data)
 
