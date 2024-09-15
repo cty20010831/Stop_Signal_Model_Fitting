@@ -7,6 +7,10 @@ venv
 # Ignore the BEESTS application from the original paper
 BEESTS_MAC_OSX
 BEESTS_Windows
+BEESTS/data
+
+# Temporarily ignore real data for paper
+data_for_paper
 
 # Saved trace or trials (dataframe) 
 model_fitting/saved_trace
