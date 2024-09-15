@@ -1,5 +1,6 @@
 .DS_Store
 __pycache__
+*zip
 
 # Ignore the virtural environment
 venv
@@ -9,8 +10,14 @@ BEESTS_MAC_OSX
 BEESTS_Windows
 BEESTS/data
 
-# Temporarily ignore real data for paper
-data_for_paper
+# Temporarily ignore parts of `data for paper` folder 
+data_for_paper/STOP-IT (4 Block Version)
+data_for_paper/2023-09-14 Database w full sample.sav
+data_for_paper/CANTAB IED Scoring Info.docx
+data_for_paper/CANTAB_IED_INVEST_TAILS_2021.11.04.xlsx
+data_for_paper/TAILS BL LNS (working memory).xlsx
+data_for_paper/TAILS_SST_Tscope_alltimepoints_3blockversion.xlsx
+data_for_paper/TAILS_SST_Tscope_alltimepoints_4blockversion.xlsx
 
 # Saved trace or trials (dataframe) 
 model_fitting/saved_trace
