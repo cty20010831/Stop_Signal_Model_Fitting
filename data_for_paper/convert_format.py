@@ -36,7 +36,7 @@ def main():
         df = pd.DataFrame(data[1:], columns=data[0])
 
         # Drop unnecessary columns 
-        df = df.drop(columns=["block", "trial", "stimulus", "re"])
+        df = df.drop(columns=["stimulus", "re"])
 
         # Determine types of trials ("go" or "stop")
         df = df.rename(columns={"signal": "trial_type"})
@@ -45,6 +45,9 @@ def main():
         # Determine ssd (NaN for go trials)
         df['ssd'] = df['ssd'].replace({"0": np.nan})
         df['ssd'] = df['ssd'].astype("float64")
+
+        # Remove go trials with zero response time 
+        df = df.drop(df[(df['trial_type'] == "go") & (df['rt'] == "0")].index)
 
         # Determine observed response time (NaN for successful inhibition trials)
         df = df.rename(columns={"rt": "observed_rt"})
@@ -64,13 +67,20 @@ def main():
         df['participant_id'] = participant_id
 
         # Reorder column
-        df = df.reindex(columns=['trial_type', 'ssd', 'observed_rt', 'outcome', 'participant_id'])
+        df = df.reindex(columns=["block", "trial", 'trial_type', 'ssd', 'observed_rt', 'outcome', 'participant_id'])
 
          # Append the DataFrame to the list
         df_list.append(df)
     
     # Concatenate all DataFrames into a single large DataFrame
     df_all = pd.concat(df_list, ignore_index=True)
+
+    # Sort participant_id from small to large (also keep the ascending order of block and trial)
+    df_all.sort_values(by=['participant_id', 'block', 'trial'], inplace=True)
+    df_all = df_all.drop(columns=['block', 'trial'])
+
+    # Use factorize() to create sequential numbering based on unique participant IDs
+    df_all['participant_id'] = pd.factorize(df_all['participant_id'])[0]
 
     # Save the data
     df_all.to_csv(os.path.join(dir, "data.csv"), index=False)
