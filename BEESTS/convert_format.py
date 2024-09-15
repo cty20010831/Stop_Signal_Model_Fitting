@@ -53,7 +53,6 @@ def main():
     
     # Reorder column
     output_data = output_data.reindex(columns=['subj_idx', 'ss_presented', 'inhibited', 'ssd', 'rt'])
-    print(output_data)
 
     # Save the data
     os.makedirs(os.path.join(dir, 'data'), exist_ok=True)
