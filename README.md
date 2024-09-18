@@ -30,11 +30,27 @@ As a classifical experimental paradigm to measure impulse control, the experimen
 
 ## (Top-Level) Repository Structure
     .
+    ├── BEESTS/               # a GUI software for model fitting on stop signal task
+    ├── data_for_paper/       # real data for model fitting
     ├── model_fitting/        # hierarchical and individual level model fitting
     ├── simulation/           # (forward) simulator of stop signal test
     ├── .gitignore
     ├── README.md
     └── requirementd.txt   
+
+### `BEESTS` directory
+BEESTS (use this [link](https://osf.io/482fv/) to download the software) is a GUI-based package enabling Bayesian hierarchical estimation of response time models for the stop signal task (Matzke et al., 2013). In this repository, it mainly serves to perform sanity check (also help debugging) for our own pymc model. 
+
+In order to run it smoothly on your local machine after downloading the software, it is important to check (oftentimes overwrite) the currernt permission to run this software. For instance, for mac users:
+```bash
+# Allow software downloading from anywhere (replace `disable` into `enable` after if you do not want to always allow your computer to download anything)
+sudo spctl --master-disable
+
+# Grant permission
+sudo chmod -R 755 <path to software>
+```
+
+We also included [convert_format.py](BEESTS/convert_format.py) file that helps convert data format from the one our pymc model expects to the one BEESTS expects. 
 
 ### `model_fitting` directory
 1. [model_fitting_simple_test_hierarchical_no_p_tf.ipynb](model_fitting/model_fitting_simple_test_hierarchical_no_p_tf.ipynb): fit a small sample of participants (with varied trials per participant) without *p_tf* at the hierarchical level
