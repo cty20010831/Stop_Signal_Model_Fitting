@@ -55,8 +55,8 @@ def main():
     output_data = output_data.reindex(columns=['subj_idx', 'ss_presented', 'inhibited', 'ssd', 'rt'])
 
     # Save the data
-    os.makedirs(os.path.join(dir, 'data'), exist_ok=True)
-    output_data.to_csv(os.path.join(dir, f"data/{args.type}_simulated_data_{args.ssd}_SSD.csv"), index=False)
+    os.makedirs(os.path.join(dir, 'test_data'), exist_ok=True)
+    output_data.to_csv(os.path.join(dir, f"test_data/{args.type}_simulated_data_{args.ssd}_SSD.csv"), index=False)
 
 if __name__ == '__main__':
     main()
