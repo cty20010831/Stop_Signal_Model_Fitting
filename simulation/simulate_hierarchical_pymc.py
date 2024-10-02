@@ -50,15 +50,15 @@ def main():
         mu_mu_stop = pm.TruncatedNormal('mu_mu_stop', mu=300, sigma=50, lower=0.001, upper=1000, initval=300)
         # sigma_mu_stop = pm.Uniform('sigma_mu_stop', lower=1, upper=500, initval=50)
         # sigma_mu_stop = pm.Gamma('sigma_mu_stop', alpha=8, beta=0.1, initval=80)
-        sigma_mu_stop = pm.Gamma('sigma_mu_stop', alpha=2, beta=0.1, initval=80)  # adjust to have higher variance
+        sigma_mu_stop = pm.Gamma('sigma_mu_stop', alpha=16, beta=0.05, initval=80)  # adjust to have higher variance
         mu_sigma_stop = pm.TruncatedNormal('mu_sigma_stop', mu=150, sigma=50, lower=1, upper=500, initval=150)
         # sigma_sigma_stop = pm.Uniform('sigma_sigma_stop', lower=1, upper=500, initval=50)
         # sigma_sigma_stop = pm.Gamma('sigma_sigma_stop', alpha=8, beta=0.1, initval=80)
-        sigma_sigma_stop = pm.Gamma('sigma_sigma_stop', alpha=2, beta=0.1, initval=80)  # adjust to have higher variance
+        sigma_sigma_stop = pm.Gamma('sigma_sigma_stop', alpha=16, beta=0.05, initval=80)  # adjust to have higher variance
         mu_tau_stop = pm.TruncatedNormal('mu_tau_stop', mu=150, sigma=50, lower=1, upper=500, initval=150)
         # sigma_tau_stop = pm.Uniform('sigma_tau_stop', lower=1, upper=500, initval=50)
         # sigma_tau_stop = pm.Gamma('sigma_tau_stop', alpha=8, beta=0.1, initval=80)
-        sigma_tau_stop = pm.Gamma('sigma_tau_stop', alpha=2, beta=0.1, initval=80) # adjust to have higher variance
+        sigma_tau_stop = pm.Gamma('sigma_tau_stop', alpha=16, beta=0.05, initval=80) # adjust to have higher variance
 
         # mu_p_tf = pm.TruncatedNormal('mu_p_tf', mu=0.05, sigma=1, lower=-1.5, upper=1.5, initval=0.05)
         mu_p_tf = pm.TruncatedNormal('mu_p_tf', mu=0.05, sigma=0.1, lower=-1.5, upper=1.5, initval=0.05)
