@@ -8,7 +8,9 @@ venv
 # Ignore the BEESTS application from the original paper
 BEESTS_MAC_OSX
 BEESTS_Windows
-BEESTS/data
+BEESTS/test_data/hierarchical_simulated_data_fixed_SSD.csv_241001-200406/*
+!BEESTS/test_data/hierarchical_simulated_data_fixed_SSD.csv_241001-200406/output.pdf
+
 
 # Temporarily ignore parts of `data for paper` folder 
 data_for_paper/STOP-IT (4 Block Version)
