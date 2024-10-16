@@ -32,3 +32,5 @@ simulation/true_param
 
 # Temporarily ignore the original model fitting notebook while debugging
 model_fitting/model_fitting.ipynb
+
+.Rhistory
