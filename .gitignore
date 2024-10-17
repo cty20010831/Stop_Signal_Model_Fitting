@@ -10,6 +10,7 @@ BEESTS_MAC_OSX
 BEESTS_Windows
 BEESTS/test_data/hierarchical_simulated_data_fixed_SSD.csv_241001-200406/*
 !BEESTS/test_data/hierarchical_simulated_data_fixed_SSD.csv_241001-200406/output.pdf
+BEESTS/real_data
 
 
 # Temporarily ignore parts of `data for paper` folder 
