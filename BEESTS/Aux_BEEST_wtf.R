@@ -636,7 +636,8 @@ post_pred_output_median_srrt = function(n_delays,delays,n_subj,median_post_pred_
   if (fsize<1)  {
     fsize=1
   }
-  table = tableGrob(post_pred_summary, gpar.coretext = gpar(fontsize=fsize),equal.width=F,gpar.coltext = gpar(fontsize=fsize),gpar.rowtext = gpar(fontsize=fsize))
+  # Updated arguments passed to tableGrob to deal with deprecitated old package version
+  table = tableGrob(post_pred_summary)
   h <- grobHeight(table)
   w <- grobWidth(table)
   
@@ -715,7 +716,8 @@ post_pred_output_inhibition_function = function(params,pars,n_subj,n_delays_all,
   if (fsize<1)  {
     fsize=1
   }
-  table = tableGrob(post_pred_if_summary,name="IF", gpar.coretext = gpar(fontsize=fsize),equal.width=F,gpar.coltext = gpar(fontsize=fsize),gpar.rowtext = gpar(fontsize=fsize))
+  # Updated arguments passed to tableGrob to deal with deprecitated old package version
+  table = tableGrob(post_pred_if_summary)
   h <- grobHeight(table)
   w <- grobWidth(table)
   
