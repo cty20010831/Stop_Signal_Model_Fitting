@@ -61,7 +61,7 @@ After converting the format to the one BEESTS expects, open **File** section on 
 One thing to notice is that under the **Advanced** section, users can specify whether they want to include trigger failure in the model, alongside prior settings for all parameters and upper and lower bounds of integration.
 <img src="BEESTS/screeshots/BEESTS_advanced.png">
 
-Due to the mismatch of `libRblas.dylib` file with my mac operation system (silicon vs. intel-based mac), I adapted the [analysis script] (BEESTS/analysis.R), which should originally be called to run after clicking **Run** under the **Analysis** section. Users can now run:
+Due to the mismatch of `libRblas.dylib` file with my mac operation system (silicon vs. intel-based mac), I adapted the [analysis script](BEESTS/analysis.R), which should originally be called to run after clicking **Run** under the **Analysis** section. Users can now run:
 ```bash
 cd BEESTS
 
