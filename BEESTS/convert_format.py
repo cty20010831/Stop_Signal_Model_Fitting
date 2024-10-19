@@ -64,7 +64,7 @@ def main():
         output_data.drop(columns="subj_idx", inplace=True)
     else:
         # For hierarchical level fitting, we need to adjust the subj_idx
-        output_data['subj_idx'] = output_data['subj_idx'] + 1
+        output_data.loc[:, 'subj_idx'] = output_data.loc[:, 'subj_idx'] + 1
     
     # Reorder column
     output_data = output_data.reindex(columns=['subj_idx', 'ss_presented', 'inhibited', 'ssd', 'rt'])
