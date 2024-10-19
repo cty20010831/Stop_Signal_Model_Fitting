@@ -70,7 +70,16 @@ Rscript analysis.R <path_to_analysisDir> <summary_statistics> <posterior_distrib
 
 cd .
 ```
-The results will be saved in `output.pdf file` under the <path_to_analysisDir>. 
+The results will be saved in `output.pdf file` under the <path_to_analysisDir>. In addition, I added a [function](BEESTS/compute_deviance.py) to compute deviance (from deviance.csv fules) averaged across all chains (for simple model comparison):
+```bash
+python BEESTS/compute_deviance.py --data <for test data or real data> --data_analysis_name <Name of the directory storing data analysis (model fitting) results>
+# E.g., python BEESTS/compute_deviance.py --data real --data_analysis_name real_data.csv_241017-220245
+```
+
+```bash
+E.g., python BEESTS/generate_sub_param.py --data <for test data or real data> --data_file_name <Name of the data file name (used for model fitting)> --data_analysis_name <Name of the directory storing data analysis (model fitting) results> --with_trigger_failure <whether including trigger failure>
+# E.g., python BEESTS/generate_sub_param.py --data real --data_file_name real_data.csv --data_analysis_name real_data.csv_241017-220245 --with_trigger_failure True
+```
 
 ### `model_fitting` directory
 1. [model_fitting_simple_test_hierarchical_no_p_tf.ipynb](model_fitting/model_fitting_simple_test_hierarchical_no_p_tf.ipynb): fit a small sample of participants (with varied trials per participant) without *p_tf* at the hierarchical level
