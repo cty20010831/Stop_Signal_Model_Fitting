@@ -82,13 +82,10 @@ E.g., python BEESTS/generate_sub_param.py --data <for test data or real data> --
 ```
 
 ### `model_fitting` directory
-1. [model_fitting_simple_test_hierarchical_no_p_tf.ipynb](model_fitting/model_fitting_simple_test_hierarchical_no_p_tf.ipynb): fit a small sample of participants (with varied trials per participant) without *p_tf* at the hierarchical level
-2. [model_fitting_simple_test_hierarchical.ipynb](model_fitting/model_fitting_simple_test_hierarchical.ipynb): fit a small sample of participants (with varied trials per participant) at the hierarchical level
-3. [model_fitting_simple_test_individual.ipynb](model_fitting/model_fitting_simple_test_individual.ipynb): fit a small sample of participants (with varied trials per participant) at the individual level (both with and without *p_tf*) and test how varying stop parameters and number of trials affect posterior distributions. 
-4. [random.py](model_fitting/random.ipynb): some debugging tries on examining the influences of varying parameters (used in formward simulation) on the posterior distribution of parameters.
-5. [test_custom_likelihood_archived.ipynb](model_fitting/test_custom_likelihood_archived.ipynb): archived notebook test whether likelihood defintion in [util_archived.py](model_fitting/util_archived.py) is correct. 
-6. [util_archived.py](model_fitting/util_archived.py): archived utility functions used in model fitting notebooks (likelihood defined using `PyTensor Op`). 
-7. [util.py](model_fitting/util.py): utility functions used in model fitting notebooks, including likelihood defintion for different trial types and posterior predictive sampling (check). 
+1. [util_archived.py](model_fitting/util_archived.py): archived utility functions used in model fitting notebooks (likelihood defined using `PyTensor Op`). 
+2. [util.py](model_fitting/util.py): utility functions used in model fitting notebooks, including likelihood defintion for different trial types and posterior predictive sampling (check). 
+
+All jupyter notebooks for testing and debugging purposes have been ignored by this reporsitory. They are saved in the Google Drive (under `model_fitting_notebook` folder). 
 
 ### `simulation` directory
 1. [sanity_check.ipynb](simulation/sanity_check.ipynb): sanity check of (forward) simulator
@@ -97,9 +94,12 @@ E.g., python BEESTS/generate_sub_param.py --data <for test data or real data> --
 4. [util.py](simulation/util.py): utility functions for forward simulator, including generating a random value following Ex-Gaussian distribution and simulating one synthetic experiment round of trials for a subject (for fixed and staircase ssd).
 
 ## Google Drive
-A Google Drive folder has been created to store saved traces and saved trials for posterior predictive check. To download them to the local directory: 
+A Google Drive folder has been created to store jupyter notebooks for model fitting (testing and debugging purposes), as well as saved traces and saved trials for posterior predictive check. To download them to the local directory: 
 ```bash
 cd model_fitting
+
+# Download jupyter notebooks for model fitting
+gdown --no-check-certificate --folder https://drive.google.com/drive/u/0/folders/1wiewGZ-2HGnsUgeO-dmYdPp56vj5jYxV?ths=true
 
 # Download saved traces
 gdown --no-check-certificate --folder https://drive.google.com/drive/u/0/folders/1Mgy8nQKrI3nMAhqskP0pfwt6dCyDWDoJ?ths=true
