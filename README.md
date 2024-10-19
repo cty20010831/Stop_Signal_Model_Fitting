@@ -77,7 +77,7 @@ python BEESTS/compute_deviance.py --data <for test data or real data> --data_ana
 ```
 
 ```bash
-E.g., python BEESTS/generate_sub_param.py --data <for test data or real data> --data_file_name <Name of the data file name (used for model fitting)> --data_analysis_name <Name of the directory storing data analysis (model fitting) results> --with_trigger_failure <whether including trigger failure>
+python BEESTS/generate_sub_param.py --data <for test data or real data> --data_file_name <Name of the data file name (used for model fitting)> --data_analysis_name <Name of the directory storing data analysis (model fitting) results> --with_trigger_failure <whether including trigger failure>
 # E.g., python BEESTS/generate_sub_param.py --data real --data_file_name real_data.csv --data_analysis_name real_data.csv_241017-220245 --with_trigger_failure True
 ```
 
