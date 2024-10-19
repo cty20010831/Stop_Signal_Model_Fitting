@@ -28,6 +28,9 @@ data_for_paper/data.csv
 model_fitting/saved_trace
 model_fitting/saved_trials_ppc
 
+# Model fitting notebooks for testing purpose
+model_fitting/*.ipynb
+
 # Simulated data and true parameter csv files
 simulation/simulated_data
 simulation/true_param
