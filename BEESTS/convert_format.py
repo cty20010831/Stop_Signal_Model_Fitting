@@ -41,7 +41,10 @@ def main():
     data = pd.read_csv(data_path)
         
     # Select rows based on specified N for testing data
-    output_data = data[data['participant_id'].isin(range(args.N))] if args.data == "test" else data
+    if args.N:
+        output_data = data[data['participant_id'].isin(range(args.N))] 
+    else:
+        output_data = data
     
     # Rename column names
     output_data.rename(columns={"trial_type": "ss_presented", 
@@ -53,8 +56,8 @@ def main():
         output_data.drop(columns="ss_rt", inplace=True)
     
     # Adjust the format (level/group names for categorical variables)
-    output_data['ss_presented'] = output_data['ss_presented'].replace({'go': 0, 'stop': 1})
-    output_data['inhibited'] = output_data['inhibited'].replace({'go': -999, 
+    output_data.loc[:, 'ss_presented'] = output_data.loc[:, 'ss_presented'].replace({'go': 0, 'stop': 1})
+    output_data.loc[:, 'inhibited'] = output_data.loc[:, 'inhibited'].replace({'go': -999, 
                                                                  "stop-respond": 0,
                                                                  "successful inhibition": 1})
     output_data.fillna(-999, inplace=True)
@@ -75,11 +78,16 @@ def main():
         output_data.to_csv(os.path.join(dir, f"test_data/{args.type}_simulated_data_{args.ssd}_SSD.csv"), index=False)
     elif args.data == "real":
         os.makedirs(os.path.join(dir, 'real_data'), exist_ok=True)
-        output_data.to_csv(os.path.join(dir, "real_data/real_data.csv"), index=False)
+        if args.N:
+            # Note that it is a small sample of data
+            output_data.to_csv(os.path.join(dir, f"real_data/real_data_{args.N}.csv"), index=False)
+        else:
+            output_data.to_csv(os.path.join(dir, "real_data/real_data.csv"), index=False)
 
 if __name__ == '__main__':
     main()
 
 # Example usage:
 # python BEESTS/convert_format.py --data test --type hierarchical --N 9 --ssd fixed
+# python BEESTS/convert_format.py --data real --N 3
 # python BEESTS/convert_format.py --data real
