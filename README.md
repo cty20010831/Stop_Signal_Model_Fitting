@@ -87,7 +87,7 @@ This is the main directory to test our model fitting results on both simulated a
 All jupyter notebooks for testing and debugging purposes have been ignored by this reporsitory. They are saved in the Google Drive (under `model_fitting_notebook` folder). 
 
 #### Numerical Integration
-To ensure that our numerical integration using pre-computed Legendre quadrature matches the result using [gsl](https://www.gnu.org/software/gsl/) (specifically, `gsl_integration_qag` used under the hood of BEESTS, which is QAG adaptive integration), we compiled the `.cpp` code and then compare the two results in [numerical_integration.ipynb](model_fitting/numerical_integration/numerical_integration.ipynb). Overall, the results match. 
+To ensure that our numerical integration using pre-computed Legendre quadrature matches the result using [gsl](https://www.gnu.org/software/gsl/) (specifically, `gsl_integration_qag` used under the hood of BEESTS, which is QAG adaptive integration), we compiled the `.cpp` code and then compare the results from `.cpp` files (including instructions on how to compile and run the code inside) and results in [numerical_integration.ipynb](model_fitting/numerical_integration/numerical_integration.ipynb). Overall, the two groups of results match. 
 
 ### `simulation` directory
 1. [sanity_check.ipynb](simulation/sanity_check.ipynb): sanity check of (forward) simulator
