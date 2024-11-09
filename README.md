@@ -82,10 +82,12 @@ python BEESTS/generate_sub_param.py --data <for test data or real data> --data_f
 ```
 
 ### `model_fitting` directory
-1. [util_archived.py](model_fitting/util_archived.py): archived utility functions used in model fitting notebooks (likelihood defined using `PyTensor Op`). 
-2. [util.py](model_fitting/util.py): utility functions used in model fitting notebooks, including likelihood defintion for different trial types and posterior predictive sampling (check). 
+This is the main directory to test our model fitting results on both simulated and real data. It includes [util.py](model_fitting/util.py) (utility functions used in model fitting notebooks, including likelihood defintion for different trial types and posterior predictive checks) and its archived version ([util_archived.py](model_fitting/util_archived.py)) where likelihood functions are defined using `PyTensor Op`.
 
 All jupyter notebooks for testing and debugging purposes have been ignored by this reporsitory. They are saved in the Google Drive (under `model_fitting_notebook` folder). 
+
+#### Numerical Integration
+To ensure that our numerical integration using pre-computed Legendre quadrature matches the result using [gsl](https://www.gnu.org/software/gsl/) (specifically, `gsl_integration_qag` used under the hood of BEESTS, which is QAG adaptive integration), we compiled the `.cpp` code and then compare the two results in [numerical_integration.ipynb](model_fitting/numerical_integration/numerical_integration.ipynb). Overall, the results match. 
 
 ### `simulation` directory
 1. [sanity_check.ipynb](simulation/sanity_check.ipynb): sanity check of (forward) simulator
