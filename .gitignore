@@ -8,10 +8,8 @@ venv
 # Ignore the BEESTS application from the original paper
 BEESTS_MAC_OSX
 BEESTS_Windows
-BEESTS/test_data/hierarchical_simulated_data_fixed_SSD.csv_241001-200406/*
-!BEESTS/test_data/hierarchical_simulated_data_fixed_SSD.csv_241001-200406/output.pdf
+BEESTS/test_data
 BEESTS/real_data
-BEESTS/real_data/real_data.csv
 
 
 # Temporarily ignore parts of `data for paper` folder 
@@ -35,8 +33,5 @@ model_fitting/archive_model_fitting/*.ipynb
 # Simulated data and true parameter csv files
 simulation/simulated_data
 simulation/true_param
-
-# Temporarily ignore testing of numerical integration
-# model_fitting/numerical_integration
 
 .Rhistory
