@@ -350,3 +350,4 @@ class Succcessful_Inhibition(Op):
         )
 
         outputs[0][0] = np.array(result)
+
