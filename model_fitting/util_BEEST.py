@@ -94,16 +94,17 @@ class GoOp(Op):
     """
     __props__ = ()
 
-    def make_node(self, value, mu_go, sigma_go, tau_go):
+    def make_node(self, value, participant_id, mu_go, sigma_go, tau_go):
         # Convert inputs to PyTensor tensors
         value = pt.as_tensor(value, dtype='float64')
+        participant_id = pt.as_tensor(participant_id, dtype='int64')
         mu_go = pt.as_tensor(mu_go, dtype='float64')
         sigma_go = pt.as_tensor(sigma_go, dtype='float64')
         tau_go = pt.as_tensor(tau_go, dtype='float64')
         
         # Define output as a scalar
         output = [pt.dscalar()]
-        return Apply(self, [value, mu_go, sigma_go, tau_go], output)
+        return Apply(self, [value, participant_id, mu_go, sigma_go, tau_go], output)
 
     # def perform(self, node, inputs, outputs):
     #     value, mu_go, sigma_go, tau_go = inputs
@@ -121,28 +122,37 @@ class GoOp(Op):
     # outputs[0][0] = np.array(sum_logp, dtype='float64')
 
     def perform(self, node, inputs, outputs):
-        value, mu_go, sigma_go, tau_go = inputs
+        value, participant_id, mu_go, sigma_go, tau_go = inputs
 
-        # Vectorized log-PDF
-        logpdf_values = exgaussian_pdf(value, mu_go, sigma_go, tau_go)
+        # Get parameters for each trial using participant_id
+        mu_go_trial = mu_go[participant_id]
+        sigma_go_trial = sigma_go[participant_id]
+        tau_go_trial = tau_go[participant_id]
 
-        # Check for invalid elements
-        if np.any(np.isnan(logpdf_values)) or np.any(np.isinf(logpdf_values)):
-            outputs[0][0] = np.array(-np.inf, dtype='float64')
-            return
-
-        sum_logp = np.sum(logpdf_values)
-
+        sum_logp = 0
+        
+        # Loop through trials
+        for i in range(len(value)):
+            logp = exgaussian_pdf(value[i], mu_go_trial[i], sigma_go_trial[i], tau_go_trial[i])
+            
+            if np.isinf(logp) or np.isnan(logp):
+                outputs[0][0] = np.array(-np.inf)
+                return
+            
+            sum_logp += logp
+        
         outputs[0][0] = np.array(sum_logp, dtype='float64')    
 
 class StopRespondOp(Op):
     """PyTensor Op for computing stop-signal response time log-likelihood."""
     __props__ = ()
 
-    def make_node(self, value, mu_go, sigma_go, tau_go, 
-                  mu_stop, sigma_stop, tau_stop, p_tf, ssd):
+    def make_node(self, value, participant_id, ssd, mu_go, sigma_go, tau_go, 
+                  mu_stop, sigma_stop, tau_stop, p_tf):
         # Convert inputs to PyTensor tensors
         value = pt.as_tensor(value, dtype='float64')
+        participant_id = pt.as_tensor(participant_id, dtype='int64')
+        ssd = pt.as_tensor(ssd, dtype='float64')
         mu_go = pt.as_tensor(mu_go, dtype='float64')
         sigma_go = pt.as_tensor(sigma_go, dtype='float64')
         tau_go = pt.as_tensor(tau_go, dtype='float64')
@@ -150,63 +160,43 @@ class StopRespondOp(Op):
         sigma_stop = pt.as_tensor(sigma_stop, dtype='float64')
         tau_stop = pt.as_tensor(tau_stop, dtype='float64')
         p_tf = pt.as_tensor(p_tf, dtype='float64')
-        ssd = pt.as_tensor(ssd, dtype='float64')
 
-        # Create inputs list
-        inputs = [value, mu_go, sigma_go, tau_go, 
-                 mu_stop, sigma_stop, tau_stop, p_tf, ssd]
-
-        # Define the output as a scalar
+        inputs = [value, participant_id, ssd, mu_go, sigma_go, tau_go, 
+                 mu_stop, sigma_stop, tau_stop, p_tf]
+        
         output = [pt.dscalar()]
         return Apply(self, inputs, output)
 
-    # def perform(self, node, inputs, outputs):
-    #     value, mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop, p_tf, ssd = inputs
-
-    #     sum_logp = 0
-    #     for i in range(len(value)):
-    #         # Compute the log-likelihood for the failed trigger
-    #         p1 = exgaussian_pdf(value[i], mu_go, sigma_go, tau_go) * p_tf
-    #         # Compute the log-likelihood for the successful trigger
-    #         p2 = exgaussian_pdf(value[i], mu_go, sigma_go, tau_go) * exgaussian_cdf(value[i] - ssd[i], mu_stop, sigma_stop, tau_stop) * (1 - p_tf)
-    #         p = np.log(p1 + p2)
-            
-    #         if np.isinf(p) or np.isnan(p):
-    #             outputs[0][0] = np.array(-np.inf)
-    #             return
-            
-    #         sum_logp += p
-        
-    #     outputs[0][0] = np.array(sum_logp, dtype='float64')
-
     def perform(self, node, inputs, outputs):
-        value, mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop, p_tf, ssd = inputs
+        value, participant_id, ssd, mu_go, sigma_go, tau_go, mu_stop, sigma_stop, tau_stop, p_tf = inputs
 
-        # Compute the Go PDF (log) on each RT
-        logpdf_go = exgaussian_pdf(value, mu_go, sigma_go, tau_go)
-        pdf_go = np.exp(logpdf_go)
+        # Get parameters for each trial using participant_id
+        mu_go_trial = mu_go[participant_id]
+        sigma_go_trial = sigma_go[participant_id]
+        tau_go_trial = tau_go[participant_id]
+        mu_stop_trial = mu_stop[participant_id]
+        sigma_stop_trial = sigma_stop[participant_id]
+        tau_stop_trial = tau_stop[participant_id]
+        p_tf_trial = p_tf[participant_id]
 
-        # Compute the Stop survival on each (RT - SSD)
-        logsurv_stop = exgaussian_cdf(value - ssd, mu_stop, sigma_stop, tau_stop)
-        surv_stop = np.exp(logsurv_stop)
-
-        # p1 = PDF_go * p_tf
-        p1 = pdf_go * p_tf
-
-        # p2 = PDF_go * Surv_stop * (1 - p_tf)
-        p2 = pdf_go * surv_stop * (1.0 - p_tf)
-
-        # Probability for each trial
-        # Add them, then take the log
-        total_log_prob = np.log(p1 + p2)
-
-        # Check invalid
-        if np.any(np.isnan(total_log_prob)) or np.any(np.isinf(total_log_prob)):
-            outputs[0][0] = np.array(-np.inf, dtype='float64')
-            return
-
-        # Sum up
-        sum_logp = np.sum(total_log_prob)
+        sum_logp = 0
+        for i in range(len(value)):
+            # Compute the log-likelihood for the failed trigger
+            p1 = np.exp(exgaussian_pdf(value[i], mu_go_trial[i], sigma_go_trial[i], tau_go_trial[i])) * p_tf_trial[i]
+            
+            # Compute the log-likelihood for the successful trigger
+            p2 = (np.exp(exgaussian_pdf(value[i], mu_go_trial[i], sigma_go_trial[i], tau_go_trial[i])) * 
+                  np.exp(exgaussian_cdf(value[i] - ssd[i], mu_stop_trial[i], sigma_stop_trial[i], tau_stop_trial[i])) * 
+                  (1 - p_tf_trial[i]))
+            
+            p = np.log(p1 + p2)
+            
+            if np.isinf(p) or np.isnan(p):
+                outputs[0][0] = np.array(-np.inf)
+                return
+            
+            sum_logp += p
+        
         outputs[0][0] = np.array(sum_logp, dtype='float64')
 
 class InhibitionsOp(Op):
@@ -216,7 +206,7 @@ class InhibitionsOp(Op):
     def make_node(self, value, mu_go, sigma_go, tau_go, 
                   mu_stop, sigma_stop, tau_stop, p_tf):
         # Convert inputs to PyTensor tensors
-        value = pt.as_tensor(value, dtype='int64')  # 2D array of ints
+        value = pt.as_tensor(value, dtype='int64')  # 2D array of ints [n_rows, 5]
         mu_go = pt.as_tensor(mu_go, dtype='float64')
         sigma_go = pt.as_tensor(sigma_go, dtype='float64')
         tau_go = pt.as_tensor(tau_go, dtype='float64')
@@ -237,22 +227,22 @@ class InhibitionsOp(Op):
         sum_logp = 0
         
         for i in range(value.shape[0]):
-            ssd = value[i, 0]
-            n_trials = value[i, 1]
-            integ_lower = value[i, 2]
-            integ_upper = value[i, 3]
+            pid = value[i, 0]  # Get participant ID from first column
+            ssd = value[i, 1]
+            n_trials = value[i, 2]
+            integ_lower = value[i, 3]
+            integ_upper = value[i, 4]
 
-            # integrate for that one SSD
             result = integrate_exgauss(
                 lower=integ_lower,
                 upper=integ_upper,
-                mu_go=mu_go,
-                sigma_go=sigma_go,
-                tau_go=tau_go,
-                mu_stop=mu_stop,
-                sigma_stop=sigma_stop,
-                tau_stop=tau_stop,
-                p_tf=p_tf,
+                mu_go=mu_go[pid],
+                sigma_go=sigma_go[pid],
+                tau_go=tau_go[pid],
+                mu_stop=mu_stop[pid],
+                sigma_stop=sigma_stop[pid],
+                tau_stop=tau_stop[pid],
+                p_tf=p_tf[pid],
                 ssd=ssd
             )
 
@@ -261,18 +251,5 @@ class InhibitionsOp(Op):
                 return
             
             sum_logp += n_trials * result
-
-            # if result <= 0:
-            #     outputs[0][0] = np.array(-np.inf)
-            #     return
-
-            # p_ssd = np.log(result)
-
-            # if np.isinf(p_ssd) or np.isnan(p_ssd):
-            #     outputs[0][0] = np.array(-np.inf)
-            #     return
-
-            # Multiply log(prob) by the number of observed trials
-            # sum_logp += n_trials * p_ssd
 
         outputs[0][0] = np.array(sum_logp, dtype='float64')
