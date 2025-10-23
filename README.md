@@ -26,7 +26,8 @@ pip freeze
 ```
 
 ## Stop Signal Task
-As a classifical experimental paradigm to measure impulse control, the experimental design of the stop signal task (for model fitting) follows the one proposed by Frederick Verbruggen (charactrized by 25% of stop trials and staircase ssd). For more details, please refer to [his jspsych implementation of this task](https://github.com/fredvbrug/STOP-IT/tree/master/jsPsych_version). 
+As a classifical experimental paradigm to measure impulse control, the experimental design of the stop signal task (for model fitting) follows the one proposed by Frederick Verbruggen (charactrized by 25% of stop trials and staircase ssd). For more details, please refer to [his jspsych implementation of this task](https://github.com/fredvbrug/STOP-IT/tree/master/jsPsych_version). For the simulation (and relatedly, posterior predictive checks), we follow the his experimental 
+settings. It is a staircase design for SSD adjustment, where the SSD increases by 50 ms after a successful inhibition trial and decreases by 50 ms after a failed inhibition trial. It also contains 25% of stop trials (trial sequence randomly assigned). In terms of the starting SSDs, they are set to be a fixed value of 200 in the jsPsych version. That said, these settings (except for staircase, as opposed to fixed SSDs) can be flexibly modified in the [simSST.py](simulation/simSST.py) file.
 
 ## (Top-Level) Repository Structure
     .
