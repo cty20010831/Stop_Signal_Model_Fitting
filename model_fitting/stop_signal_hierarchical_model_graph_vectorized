@@ -1,0 +1,96 @@
+digraph {
+	mu_itau_go [label="mu_itau_go
+~
+Uniform" shape=ellipse]
+	sigma_imu_stop [label="sigma_imu_stop
+~
+Uniform" shape=ellipse]
+	mu_isigma_go [label="mu_isigma_go
+~
+Uniform" shape=ellipse]
+	sigma_itau_stop [label="sigma_itau_stop
+~
+Uniform" shape=ellipse]
+	likelihood [label="likelihood
+~
+Potential" shape=octagon style=filled]
+	mu_isigma_stop [label="mu_isigma_stop
+~
+Uniform" shape=ellipse]
+	sigma_isigma_stop [label="sigma_isigma_stop
+~
+Uniform" shape=ellipse]
+	sigma_imu_go [label="sigma_imu_go
+~
+Uniform" shape=ellipse]
+	mu_imu_go [label="mu_imu_go
+~
+Uniform" shape=ellipse]
+	mu_ip_tf_probit [label="mu_ip_tf_probit
+~
+TruncatedNormal" shape=ellipse]
+	sigma_isigma_go [label="sigma_isigma_go
+~
+Uniform" shape=ellipse]
+	sigma_ip_tf_probit [label="sigma_ip_tf_probit
+~
+Uniform" shape=ellipse]
+	mu_itau_stop [label="mu_itau_stop
+~
+Uniform" shape=ellipse]
+	mu_imu_stop [label="mu_imu_stop
+~
+Uniform" shape=ellipse]
+	sigma_itau_go [label="sigma_itau_go
+~
+Uniform" shape=ellipse]
+	subgraph cluster100 {
+		itau_go [label="itau_go
+~
+TruncatedNormal" shape=ellipse]
+		ip_tf_probit [label="ip_tf_probit
+~
+TruncatedNormal" shape=ellipse]
+		isigma_go [label="isigma_go
+~
+TruncatedNormal" shape=ellipse]
+		isigma_stop [label="isigma_stop
+~
+TruncatedNormal" shape=ellipse]
+		itau_stop [label="itau_stop
+~
+TruncatedNormal" shape=ellipse]
+		ip_tf [label="ip_tf
+~
+Deterministic" shape=box]
+		imu_go [label="imu_go
+~
+TruncatedNormal" shape=ellipse]
+		imu_stop [label="imu_stop
+~
+TruncatedNormal" shape=ellipse]
+		label=100 labeljust=r labelloc=b style=rounded
+	}
+	sigma_imu_go -> imu_go
+	mu_imu_go -> imu_go
+	sigma_isigma_go -> isigma_go
+	mu_isigma_go -> isigma_go
+	mu_itau_go -> itau_go
+	sigma_itau_go -> itau_go
+	sigma_imu_stop -> imu_stop
+	mu_imu_stop -> imu_stop
+	sigma_isigma_stop -> isigma_stop
+	mu_isigma_stop -> isigma_stop
+	sigma_itau_stop -> itau_stop
+	mu_itau_stop -> itau_stop
+	mu_ip_tf_probit -> ip_tf_probit
+	sigma_ip_tf_probit -> ip_tf_probit
+	ip_tf_probit -> ip_tf
+	itau_go -> likelihood
+	isigma_stop -> likelihood
+	itau_stop -> likelihood
+	ip_tf -> likelihood
+	imu_go -> likelihood
+	imu_stop -> likelihood
+	isigma_go -> likelihood
+}
