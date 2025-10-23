@@ -33,6 +33,7 @@ As a classifical experimental paradigm to measure impulse control, the experimen
     ├── BEESTS/               # a GUI software for model fitting on stop signal task
     ├── data_for_paper/       # real data for model fitting
     ├── model_fitting/        # hierarchical and individual level model fitting
+    ├── progress_report/      # progress reports for this project
     ├── simulation/           # (forward) simulator of stop signal test
     ├── .gitignore
     ├── README.md
@@ -82,32 +83,17 @@ python BEESTS/generate_sub_param.py --data <for test data or real data> --data_f
 ```
 
 ### `model_fitting` directory
-This is the main directory to test our model fitting results on both simulated and real data. It includes [util.py](model_fitting/util.py) (utility functions used in model fitting notebooks, including likelihood defintion for different trial types and posterior predictive checks) and its archived version ([util_archived.py](model_fitting/util_archived.py)) where likelihood functions are defined using `PyTensor Op`.
+This is the main directory to test our model fitting results on real data. It includes [util.py](model_fitting/util.py) (utility functions used in model fitting notebooks, including likelihood defintion for different trial types and posterior predictive checks).
 
-All jupyter notebooks for testing and debugging purposes have been ignored by this reporsitory. They are saved in the Google Drive (under `model_fitting_notebook` folder). 
+Right now, there are three main versions: 1) traditional pymc implementation, 2) Cython-wrapped likelihood implementation (mimicing the cython likelihood definition in BEESTS), and 3) JAX-based implementation without gradient support (for now).
+
+#### Archive_Model_Fitting
+This directory includes archived model fitting notebooks and utility functions that are no longer actively maintained.
 
 #### Numerical Integration
 To ensure that our numerical integration using pre-computed Legendre quadrature matches the result using [gsl](https://www.gnu.org/software/gsl/) (specifically, `gsl_integration_qag` used under the hood of BEESTS, which is QAG adaptive integration), we compiled the `.cpp` code and then compare the results from `.cpp` files (including instructions on how to compile and run the code inside) and results in [numerical_integration.ipynb](model_fitting/numerical_integration/numerical_integration.ipynb). Overall, the two groups of results match. 
 
 ### `simulation` directory
-1. [sanity_check.ipynb](simulation/sanity_check.ipynb): sanity check of (forward) simulator
-2. [simulate_hierarchical_pymc.py](simulation/simulate_hierarchical_pymc.py): simulate data for hierarchical-level model fitting (with group/hyper parameters)
-3. [simulate_individual_pymc.py](simulation/simulate_individual_pymc.py): simulate data for individual-level model fitting (without group/hyper parameters)
-4. [util.py](simulation/util.py): utility functions for forward simulator, including generating a random value following Ex-Gaussian distribution and simulating one synthetic experiment round of trials for a subject (for fixed and staircase ssd).
-
-## Google Drive
-A Google Drive folder has been created to store jupyter notebooks for model fitting (testing and debugging purposes), as well as saved traces and saved trials for posterior predictive check. To download them to the local directory: 
-```bash
-cd model_fitting
-
-# Download jupyter notebooks for model fitting
-gdown --no-check-certificate --folder https://drive.google.com/drive/u/0/folders/1wiewGZ-2HGnsUgeO-dmYdPp56vj5jYxV?ths=true
-
-# Download saved traces
-gdown --no-check-certificate --folder https://drive.google.com/drive/u/0/folders/1Mgy8nQKrI3nMAhqskP0pfwt6dCyDWDoJ?ths=true
-
-# Download saved trials
-gdown --no-check-certificate --folder https://drive.google.com/drive/u/0/folders/1iHmZUOqJilN5Xudgk6qY-NVhwykKvk3w?ths=true
-
-cd ..
-```
+1. [archive/](simulation/archive/): archived simulation scripts
+2. [simSST.py](simulation/simSST.py): main forward simulator of stop signal task
+3. [simulation_psuedo_code.tt](simulation/simulation_pseudo_code.txt): pseudo code of the forward simulator
