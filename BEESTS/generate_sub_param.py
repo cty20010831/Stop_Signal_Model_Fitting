@@ -19,7 +19,7 @@ def main():
     parser.add_argument('--data', type=str, choices=['test', 'real'], help="For test data or real data")
     parser.add_argument('--data_file_name', type=str, help="Name of the data file name (used for model fitting)")
     parser.add_argument('--data_analysis_name', type=str, help="Name of the directory storing data analysis (model fitting) results")
-    parser.add_argument('--with_trigger_failure', type=bool, help="Whether including trigger failture")
+    parser.add_argument('--with_trigger_failure', action='store_true', help="Include trigger failure model")
 
     # Parse command-line arguments
     args = parser.parse_args()
@@ -38,7 +38,7 @@ def main():
 
     # Determine number of subjects
     n_subjects = pd.read_csv(os.path.join(dir, data_dir, args.data_file_name)).loc[:, 'subj_idx'].nunique()
-    print(f'There are in total {n_subjects} in model fitting.')
+    print(f"There are in total {n_subjects} in model fitting.")
 
     # Initialize a dictionary to accumulate parameter values across chains for each subject
     accumulated_params = {f"subject_{subj + 1}": [] for subj in range(n_subjects)}
@@ -57,7 +57,8 @@ def main():
                 subject_params = data[sub_param_name]
 
                 # Convert parameters in probit scale (in this case, p_tf) to probabilities
-                subject_params.loc[:, f'p_tf_subjpt.{subj}'] = norm.cdf(subject_params.loc[:, f'p_tf_subjpt.{subj}'])
+                if 'p_tf' in params:
+                    subject_params.loc[:, f'p_tf_subjpt.{subj}'] = norm.cdf(subject_params.loc[:, f'p_tf_subjpt.{subj}'])
 
                 # Rename columns to standard names
                 subject_params.columns = params 
@@ -88,3 +89,8 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# Example usage:
+# python BEESTS/generate_sub_param.py --data real --data_file_name real_data_5.csv --data_analysis_name real_data_5.csv_250410-215049 --with_trigger_failure True
+# python BEESTS/generate_sub_param.py --data real --data_file_name real_data_5.csv --data_analysis_name real_data_5.csv_250616-142647
+# python BEESTS/generate_sub_param.py --data test --data_file_name test_staircase_SimSST_n_5.csv --data_analysis_name test_staircase_SimSST_n_5.csv_250616-143235

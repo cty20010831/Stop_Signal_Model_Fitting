@@ -1,6 +1,5 @@
 '''
-This python script is used to convert the data from `simulation` folder into 
-the format BEESTS software expects. 
+This python script is used to convert the data into the format BEESTS software expects. 
 '''
 import os
 import pandas as pd
