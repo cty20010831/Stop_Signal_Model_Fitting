@@ -29,9 +29,11 @@ model_fitting/saved_trials_ppc
 # Model fitting notebooks for testing purpose
 model_fitting/*.ipynb
 model_fitting/archive_model_fitting/*.ipynb
+model_fitting/archive_model_fitting/*.py
 
 # Simulated data and true parameter csv files
 simulation/simulated_data
 simulation/true_param
 
 .Rhistory
+.codegpt
