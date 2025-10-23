@@ -1,0 +1,132 @@
+# ============================================================================
+# SIMPLIFIED TRIGGER FAILURE LOGIC (Matzke et al. 2016)
+# ============================================================================
+
+FUNCTION simulate_stop_signal_trial(go_rt, ssd, mu_stop, sigma_stop, tau_stop, p_tf):
+    """
+    Simulate a single stop-signal trial with trigger failures
+    """
+    
+    # Step 1: Check if trigger fails
+    IF random() < p_tf:
+        # Trigger failure occurred - stop process never started
+        outcome = "stop-respond"
+        response_rt = go_rt  # Participant responds with go RT
+        return {outcome, response_rt, ssd}
+    
+    # Step 2: Stop process was triggered - normal race model
+    ELSE:
+        # Generate SSRT from ex-Gaussian distribution
+        ssrt = sample_exgaussian(mu_stop, sigma_stop, tau_stop)
+        
+        # Determine race outcome
+        IF go_rt < (ssd + ssrt):
+            # Go process wins - response executed
+            outcome = "stop-respond"
+            response_rt = go_rt
+        ELSE:
+            # Stop process wins - response inhibited
+            outcome = "successful_inhibition"
+            response_rt = NA
+        
+        return {outcome, response_rt, ssd}
+
+
+# ============================================================================
+# STAIRCASE ADJUSTMENT (after each stop trial)
+# ============================================================================
+
+FUNCTION update_ssd(current_ssd, outcome, step_size):
+    """
+    Adjust SSD based on previous stop trial outcome
+    """
+    
+    IF outcome == "successful_inhibition":
+        new_ssd = current_ssd + step_size  # Increase difficulty
+    
+    ELSE:  # stop-respond (failed inhibition)
+        new_ssd = current_ssd - step_size  # Decrease difficulty
+    
+    return new_ssd
+
+
+# ============================================================================
+# FULL SIMULATION LOOP (one participant, one block)
+# ============================================================================
+
+FUNCTION simulate_block(n_go, n_stop, ssd_baseline, step_size, 
+                        mu_go, sigma_go, tau_go,
+                        mu_stop, sigma_stop, tau_stop, 
+                        rho, p_tf):
+    """
+    Simulate all trials in a block with trigger failures
+    
+    Parameters:
+    - n_go: number of go trials
+    - n_stop: number of stop trials
+    - ssd_baseline: starting SSD (e.g., 200 ms)
+    - step_size: staircase increment/decrement (e.g., 50 ms)
+    - mu_go, sigma_go, tau_go: go RT ex-Gaussian parameters
+    - mu_stop, sigma_stop, tau_stop: SSRT ex-Gaussian parameters
+    - rho: correlation between go and stop RTs
+    - p_tf: probability of trigger failure (0 to 1)
+    """
+    
+    trials = []
+    current_ssd = ssd_baseline
+    
+    FOR each trial in random_order(n_go + n_stop trials):
+        
+        # Generate go RT
+        go_rt = sample_exgaussian_correlated(
+            mu_go, sigma_go, tau_go, rho
+        )
+        
+        IF trial_type == "go":
+            # Go trial (no stop signal)
+            trials.append({
+                trial_type: "go",
+                go_rt: go_rt,
+                ssd: NA
+            })
+        
+        ELSE:  # trial_type == "stop"
+            # Stop trial with potential trigger failure
+            result = simulate_stop_signal_trial(
+                go_rt, current_ssd, 
+                mu_stop, sigma_stop, tau_stop, 
+                p_tf
+            )
+            
+            trials.append({
+                trial_type: "stop",
+                outcome: result.outcome,
+                go_rt: go_rt,
+                response_rt: result.response_rt,
+                ssd: current_ssd
+            })
+            
+            # Update SSD for next stop trial
+            current_ssd = update_ssd(
+                current_ssd, 
+                result.outcome, 
+                step_size
+            )
+    
+    return trials
+
+
+# ============================================================================
+# KEY INSIGHT: What trigger failures produce
+# ============================================================================
+
+# WITHOUT trigger failures:
+# - Short SSDs → mostly "stop-respond" (low inhibition)
+# - Long SSDs → mostly "successful_inhibition" (high inhibition)
+# - Inhibition function asymptotes at 0 for short SSDs
+
+# WITH p_tf trigger failures:
+# - Short SSDs → some "stop-respond" from TF + some from lost race
+# - Long SSDs → mostly "successful_inhibition"
+# - Inhibition function asymptotes at p_tf (not at 0!)
+# - This asymptote is the telltale signature BEESTS uses to estimate p_tf

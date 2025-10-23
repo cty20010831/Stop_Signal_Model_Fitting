@@ -206,6 +206,8 @@ def simulate_trials_staircase_SSD(trial_type_sequence, starting_ssd, p_tf,
     '''
     Simulate synthetic experiment trials for a subject following the 
     pre-determined trial sequence using a staircase SSD procedure.
+    The staircase procedure adjusts the SSD to target approximately 50% 
+    successful inhibitions, which is optimal for SSRT estimation.
 
     Parameters
     ---------- 
@@ -266,7 +268,9 @@ def simulate_trials_staircase_SSD(trial_type_sequence, starting_ssd, p_tf,
                     trial_data.update({'observed_rt': go_rt, 'ss_rt': ssrt, 'outcome': 'stop-respond'})
             
             # Dynamically adjust ssd based on performance
-            ssd = ssd + 50 if trial_data['outcome'] == 'successful inhibition' else ssd - 50
+            # Increase SSD by 50ms after successful inhibition, decrease by 50ms after failed inhibition
+            # This aims to converge to ~50% successful inhibitions
+            ssd = max(0, ssd + 50 if trial_data['outcome'] == 'successful inhibition' else ssd - 50)
         else:
             go_rt = simulate_exgaussian(mu_go, sigma_go, tau_go)
             trial_data.update({'observed_rt': go_rt, 'outcome': 'go'})
@@ -282,6 +286,8 @@ def simulate_trials_staircase_SSD_no_p_tf(trial_type_sequence, starting_ssd,
     Simulate synthetic experiment trials for a subject following the 
     pre-determined trial sequence using a staircase SSD procedure without
     considering the probability of trigger failure (p_tf).
+    The staircase procedure adjusts the SSD to target approximately 50% 
+    successful inhibitions, which is optimal for SSRT estimation.
 
     Parameters
     ---------- 
@@ -338,7 +344,9 @@ def simulate_trials_staircase_SSD_no_p_tf(trial_type_sequence, starting_ssd,
                 trial_data.update({'observed_rt': go_rt, 'ss_rt': ssrt, 'outcome': 'stop-respond'})
             
             # Dynamically adjust ssd based on performance
-            ssd = ssd + 50 if trial_data['outcome'] == 'successful inhibition' else ssd - 50
+            # Increase SSD by 50ms after successful inhibition, decrease by 50ms after failed inhibition
+            # This aims to converge to ~50% successful inhibitions
+            ssd = max(0, ssd + 50 if trial_data['outcome'] == 'successful inhibition' else ssd - 50)
         else:
             go_rt = simulate_exgaussian(mu_go, sigma_go, tau_go)
             trial_data.update({'observed_rt': go_rt, 'outcome': 'go'})
